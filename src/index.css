@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f3f7f9 0%, #eef6f6 100%); /* التدرج السماوي الفاتح */
+    color: #333;
+    direction: rtl; /* اتجاه عربي */
+}
