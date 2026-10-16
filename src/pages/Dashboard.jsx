@@ -68,7 +68,7 @@ export default function Dashboard() {
 
     const fetchMaterials = (subjectId) => {
         setLoading(true);
-        axios.get(`http://localhost:3000/api/materials/subject/${subjectId}`)
+        axios.get(`https://edu-platform-backend-alpha.vercel.app//api/materials/subject/${subjectId}`)
             .then(response => {
                 if (response.data.success) {
                     setMaterials(response.data.materials);
@@ -91,7 +91,7 @@ export default function Dashboard() {
 
         try {
             const token = user?.token || localStorage.getItem('token');
-            const response = await axios.delete(`http://localhost:3000/api/materials/${materialId}`, {
+            const response = await axios.delete(`https://edu-platform-backend-alpha.vercel.app//api/materials/${materialId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
