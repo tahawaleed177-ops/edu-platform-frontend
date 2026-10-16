@@ -24,12 +24,21 @@ export default function Navbar() {
                 {!user ? (
                     <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>تسجيل الدخول</Link>
                 ) : (
-                    /* إذا سجل دخوله، نعرض المحاضرات وزر الخروج */
+                    /* إذا سجل دخوله، نعرض الروابط وزر الخروج */
                     <>
                         <span style={{ color: '#00adb5', fontSize: '14px' }}>مرحباً: {user.email}</span>
+                        
                         <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>المحاضرات</Link>
                         
-                        {/* 🔒 هذا الزر يظهر فقط إذا كان الإيميل في القائمة البيضاء */}
+                        {/* === زر التبليغات الجديد المتاح للطلاب والأدمن === */}
+                        <Link to="/announcements" style={{ 
+                            color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600',
+                            display: 'flex', alignItems: 'center', gap: '5px'
+                        }}>
+                            📢 التبليغات
+                        </Link>
+                        
+                        {/* 🔒 هذا الزر يظهر فقط إذا كان الإيميل في القائمة البيضاء (المدير) */}
                         {user.isAdmin && (
                             <Link to="/upload" style={{ 
                                 background: '#00adb5', color: 'white', textDecoration: 'none', 
