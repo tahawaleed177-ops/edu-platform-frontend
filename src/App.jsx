@@ -22,7 +22,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/announcements" element={<Announcements />} />
+          import Announcements from './pages/Announcements'; // المجلد الذي حفظتها فيه
           {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
           <Route
             path="/dashboard"
