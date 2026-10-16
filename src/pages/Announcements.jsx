@@ -1,21 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { AuthContext } from '../context/AuthContext'; // تأكد من مسار الـ AuthContext حسب مشروعك
+import { AuthContext } from '../context/AuthContext';
 
 export default function Announcements() {
     const { user } = useContext(AuthContext);
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // حالات مخصصة لنموذج إضافة التبليغ
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [status, setStatus] = useState({ loading: false, message: '', type: '' });
 
-    // التحقق هل المستخدم الحالي هو المدير (tahawaleed177@gmail.com أو isAdmin)
+    // قراءة الصلاحية بشكل نظيف من المستخدم المسجل
     const isAdmin = user?.isAdmin || (localStorage.getItem('user') && JSON.parse(localStorage.getItem('user')).isAdmin);
 
-    // جلب التبليغات عند فتح الصفحة
     useEffect(() => {
         fetchAnnouncements();
     }, []);
@@ -34,7 +32,6 @@ export default function Announcements() {
         }
     };
 
-    // دالة نشر تبليغ جديد
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -57,10 +54,8 @@ export default function Announcements() {
                 setStatus({ loading: false, message: 'تم نشر التبليغ بنجاح! 🚀', type: 'success' });
                 setTitle('');
                 setContent('');
-                // تحديث القائمة فوراً لإظهار التبليغ الجديد
                 fetchAnnouncements();
                 
-                // إخفاء رسالة النجاح بعد 3 ثواني
                 setTimeout(() => setStatus({ loading: false, message: '', type: '' }), 3000);
             }
         } catch (error) {
@@ -69,7 +64,6 @@ export default function Announcements() {
         }
     };
 
-    // دالة حذف التبليغ
     const handleDelete = async (id, title) => {
         if (!window.confirm(`هل أنت متأكد من حذف التبليغ "${title}"؟`)) return;
 
@@ -78,7 +72,6 @@ export default function Announcements() {
             await axios.delete(`https://edu-platform-backend-alpha.vercel.app/api/announcements/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // إزالة التبليغ من الواجهة مباشرة
             setAnnouncements((prev) => prev.filter((item) => item.id !== id));
         } catch (error) {
             console.error('Error deleting announcement:', error);
@@ -95,7 +88,6 @@ export default function Announcements() {
                 <p style={{ color: '#666', fontSize: '16px' }}>آخر الأخبار والتحديثات الرسمية للمرحلة الثانية</p>
             </div>
 
-            {/* صندوق نشر تبليغ جديد (يظهر للمدير فقط) */}
             {isAdmin && (
                 <div style={{
                     background: 'white', borderRadius: '20px', padding: '30px', marginBottom: '40px',
@@ -152,7 +144,6 @@ export default function Announcements() {
                 </div>
             )}
 
-            {/* عرض قائمة التبليغات */}
             {loading ? (
                 <div style={{ textAlign: 'center', color: '#00adb5', fontWeight: 'bold', fontSize: '18px' }}>
                     جاري تحميل التبليغات... ⏳
@@ -169,7 +160,6 @@ export default function Announcements() {
                             boxShadow: '0 5px 15px rgba(0,0,0,0.05)', borderRight: '5px solid #0B2447',
                             position: 'relative'
                         }}>
-                            {/* زر الحذف للمدير */}
                             {isAdmin && (
                                 <button 
                                     onClick={() => handleDelete(item.id, item.title)}
