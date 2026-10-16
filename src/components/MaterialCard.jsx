@@ -1,12 +1,11 @@
 import React from 'react';
 
 export default function MaterialCard({ material, isAdmin, onDelete, onPreview }) {
-    // تنسيق رابط الملف لضمان عدم تكرار الشرطة المائلة (/)
-    const cleanFileUrl = material.file_url?.startsWith('/') 
-        ? material.file_url 
-        : `/${material.file_url}`;
-
-    const fullFileUrl = `https://edu-platform-backend-alpha.vercel.app${cleanFileUrl}`;
+    // التعديل السحري: فحص الرابط أولاً
+    // إذا كان يبدأ بـ http (مثل روابط Supabase) نستخدمه كما هو، وإلا ندمجه مع رابط الباك إند
+    const fullFileUrl = material.file_url?.startsWith('http')
+        ? material.file_url
+        : `https://edu-platform-backend-alpha.vercel.app${material.file_url?.startsWith('/') ? material.file_url : `/\${material.file_url}`}`;
 
     return (
         <div 
