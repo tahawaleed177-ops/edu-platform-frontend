@@ -46,7 +46,7 @@ export default function UploadMaterial() {
             // === التعديل هنا: جلب مفتاح الدخول (التوكن) من المتصفح ===
             const token = localStorage.getItem('token'); 
 
-            const response = await axios.post('https://edu-platform-backend-alpha.vercel.app//api/materials/upload', formData, {
+            const response = await axios.post('https://edu-platform-backend-alpha.vercel.app/api/materials/upload', formData, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                     // === التعديل هنا: إرفاق التوكن للحارس الأمني ===

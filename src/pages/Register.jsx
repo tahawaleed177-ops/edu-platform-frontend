@@ -16,7 +16,7 @@ export default function Register() {
 
         try {
             // إرسال بيانات المستخدم الجديد للباك إند
-            const response = await axios.post('https://edu-platform-backend-alpha.vercel.app//api/auth/register', {
+            const response = await axios.post('https://edu-platform-backend-alpha.vercel.app/api/auth/register', {
                 name,
                 email,
                 password

@@ -12,7 +12,7 @@ export default function ForgotPassword() {
 
         try {
             // إرسال طلب استعادة للباك إند
-            await axios.post('https://edu-platform-backend-alpha.vercel.app//api/auth/forgot-password', { email });
+            await axios.post('https://edu-platform-backend-alpha.vercel.app/api/auth/forgot-password', { email });
             // نفترض أن الباك إند سيرد بنجاح الاستلام
             setStatus({ loading: false, message: 'تم إرسال تعليمات استعادة كلمة المرور إلى بريدك الإلكتروني بنجاح.', type: 'success' });
         } catch (error) {

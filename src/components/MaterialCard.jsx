@@ -6,7 +6,7 @@ export default function MaterialCard({ material, isAdmin, onDelete, onPreview })
         ? material.file_url 
         : `/${material.file_url}`;
 
-    const fullFileUrl = `https://edu-platform-backend-alpha.vercel.app/${cleanFileUrl}`;
+    const fullFileUrl = `https://edu-platform-backend-alpha.vercel.app${cleanFileUrl}`;
 
     return (
         <div 

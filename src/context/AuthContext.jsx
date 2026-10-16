@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('https://edu-platform-backend-alpha.vercel.app//api/auth/login', {
+            const response = await axios.post('https://edu-platform-backend-alpha.vercel.app/api/auth/login', {
                 email,
                 password
             });
