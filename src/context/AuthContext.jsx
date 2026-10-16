@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const allowedAdminEmails = ['tahawaleed177@gmail.com'];
+    // تم حذف القائمة الثابتة لأننا نعتمد الآن على قاعدة البيانات
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -25,11 +25,11 @@ export function AuthProvider({ children }) {
             });
 
             if (response.data.token) {
-                const isAdmin = allowedAdminEmails.includes(email.toLowerCase());
+                // الاعتماد الكلي على قيمة isAdmin القادمة من الباك إند (قاعدة البيانات)
+                const isAdmin = response.data.user?.isAdmin || false;
                 
-                // === التعديل هنا: سحب الاسم القادم من الباك إند ===
-                // إذا لم يجد اسماً، سيضع "طه" للإدارة، أو "طالب" للمستخدم العادي
-                const fullName = response.data.user?.name || (isAdmin ? 'في' : 'طالب');
+                // سحب الاسم القادم من الباك إند
+                const fullName = response.data.user?.name || (isAdmin ? 'مشرف' : 'طالب');
 
                 const userData = { 
                     email: email, 
@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
                 setUser(userData);
                 localStorage.setItem('user', JSON.stringify(userData)); 
                 
-                // === التعديل الأهم: حفظ التوكن والاسم بشكل صريح لتقرأه لوحة التحكم ===
+                // حفظ التوكن والاسم بشكل صريح لتقرأه لوحة التحكم
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('userName', fullName);
                 
@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user'); 
-        // === تنظيف الذاكرة بالكامل عند الخروج ===
+        // تنظيف الذاكرة بالكامل عند الخروج
         localStorage.removeItem('token');
         localStorage.removeItem('userName');
         delete axios.defaults.headers.common['Authorization'];
