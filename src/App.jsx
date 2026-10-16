@@ -7,7 +7,7 @@ import UploadMaterial from './pages/UploadMaterial';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider } from './context/AuthContext';
-
+import Announcements from './pages/Announcements'; // (أو مسار المجلد الذي حفظتها فيه)
 // استدعاء حارس المسارات
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -22,7 +22,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-
+<Route path="/announcements" element={<Announcements />} />
           {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
           <Route
             path="/dashboard"
