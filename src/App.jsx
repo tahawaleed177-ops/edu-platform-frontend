@@ -9,7 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Announcements from './pages/Announcements';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import './App.css'; // تأكد من وجود هذا السطر
 function App() {
   return (
     <AuthProvider>

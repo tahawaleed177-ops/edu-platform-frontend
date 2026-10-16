@@ -182,3 +182,67 @@
     border-right-color: var(--border);
   }
 }
+/* ==============================================================
+   تنسيقات التجاوب للهواتف المحمولة (Responsive Design)
+   ============================================================== */
+@media screen and (max-width: 768px) {
+    /* 1. إصلاح شريط التنقل (Navbar) */
+    nav {
+        flex-direction: column;
+        padding: 15px !important;
+        gap: 15px;
+        text-align: center;
+    }
+    nav div {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px !important;
+    }
+    nav a, nav button, nav span {
+        font-size: 13px !important;
+        padding: 8px 10px !important;
+    }
+
+    /* 2. إصلاح الحاويات الرئيسية للمسافات (Padding) */
+    .container, 
+    div[style*="max-width: 1200px"], 
+    div[style*="max-width: 900px"] {
+        padding: 20px 15px !important;
+    }
+
+    /* 3. إصلاح شبكة المواد (Grid) لتصبح عمودية */
+    div[style*="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))"],
+    div[style*="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    /* 4. تصغير العناوين والنصوص الكبيرة */
+    h1 { font-size: 28px !important; }
+    h2 { font-size: 24px !important; }
+    h3 { font-size: 18px !important; }
+    
+    /* 5. إصلاح أزرار التبديل (الكورسات) */
+    div[style*="justify-content: center"][style*="gap: 15px"] {
+        flex-direction: column;
+        width: 100%;
+    }
+    div[style*="justify-content: center"] > button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    /* 6. إصلاح الصناديق المنبثقة (Modals) مثل نافذة المعاينة */
+    div[style*="width: 95%"][style*="max-width: 1000px"] {
+        width: 100% !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 7. إصلاح صندوق إدخال البحث والنماذج */
+    input, textarea, select {
+        font-size: 14px !important;
+        padding: 12px !important;
+    }
+}
