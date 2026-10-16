@@ -22,7 +22,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-<Route path="/announcements" element={<Announcements />} />
+          <Route path="/announcements" element={<Announcements />} />
           {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
           <Route
             path="/dashboard"
