@@ -6,9 +6,8 @@ import Dashboard from './pages/Dashboard';
 import UploadMaterial from './pages/UploadMaterial';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import Announcements from './pages/Announcements';
 import { AuthProvider } from './context/AuthContext';
-import Announcements from './pages/Announcements'; // (أو مسار المجلد الذي حفظتها فيه)
-// استدعاء حارس المسارات
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -22,7 +21,17 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          import Announcements from './pages/Announcements'; // المجلد الذي حفظتها فيه
+          
+          {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
+          <Route 
+            path="/announcements" 
+            element={
+              <ProtectedRoute>
+                <Announcements />
+              </ProtectedRoute>
+            } 
+          />
+
           {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
           <Route
             path="/dashboard"
