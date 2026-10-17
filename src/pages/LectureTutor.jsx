@@ -20,12 +20,22 @@ export default function LectureTutor() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // جلب جميع المحاضرات من الباك إند عند فتح الصفحة
+    // جلب جميع المحاضرات من الباك إند عند فتح الصفحة مع إرسال التوكن
     useEffect(() => {
         const fetchMaterials = async () => {
             try {
-                const res = await axios.get('https://edu-platform-backend-alpha.vercel.app/api/materials');
-                setMaterials(res.data);
+                // 1. جلب التوكن الخاص بالطالب المسجل دخوله
+                const token = localStorage.getItem('token'); 
+                
+                // 2. إرسال التوكن مع الطلب لتخطي الحماية
+                const res = await axios.get('https://edu-platform-backend-alpha.vercel.app/api/materials', {
+                    headers: { Authorization: `Bearer ${token}` } 
+                });
+                
+                // 3. التأكد من استخراج مصفوفة المحاضرات بشكل صحيح
+                const materialsData = Array.isArray(res.data) ? res.data : (res.data.data || res.data.materials || []);
+                setMaterials(materialsData);
+                
             } catch (error) {
                 console.error("خطأ في جلب المحاضرات:", error);
             }
