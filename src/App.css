@@ -251,35 +251,59 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* === ألوان الوضع الليلي === */
-body.dark-mode {
-    background-color: #0f172a !important; /* لون الخلفية الرئيسي الداكن */
-    color: #e2e8f0 !important;
+/* تأثير انتقال ناعم عند تبديل الوضع */
+html, body, #root {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* تحويل كل المربعات البيضاء في المنصة إلى اللون الداكن */
+/* === ألوان الوضع الليلي الاحترافية (Dark Mode) === */
+
+/* 1. إجبار الشاشة بالكامل على اللون الداكن (لون كحلي مائل للأسود مريح للعين) */
+body.dark-mode, 
+body.dark-mode #root,
+body.dark-mode html {
+    background-color: #111827 !important; 
+    color: #e5e7eb !important;
+    min-height: 100vh;
+}
+
+/* 2. تحويل كل الكروت والمربعات البيضاء إلى لون رمادي داكن أنيق */
 body.dark-mode div[style*="background: white"],
 body.dark-mode div[style*="background: '#fcfdfe'"],
 body.dark-mode div[style*="background: '#f9fcfe'"],
-body.dark-mode div[style*="background: '#f0fdf4'"] {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f8fafc !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+body.dark-mode div[style*="background: '#f0fdf4'"],
+body.dark-mode div[style*='background: "white"'] {
+    background: #1f2937 !important; /* لون الكارت */
+    border: 1px solid #374151 !important; /* لون إطار الكارت */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* تعديل ألوان النصوص والعناوين لتصبح فاتحة */
+/* 3. توضيح العناوين والنصوص لكي لا تختفي */
+body.dark-mode h1,
 body.dark-mode h2, 
 body.dark-mode h3, 
-body.dark-mode h4,
-body.dark-mode p {
-    color: #f1f5f9 !important;
+body.dark-mode h4 {
+    color: #ffffff !important;
 }
 
-/* تعديل حقول البحث والإدخال */
-body.dark-mode input, 
-body.dark-mode select {
-    background: #1e293b !important;
-    color: white !important;
-    border-color: #334155 !important;
+body.dark-mode p,
+body.dark-mode span {
+    color: #9ca3af !important;
+}
+
+/* 4. تصميم شريط البحث في الوضع الليلي */
+body.dark-mode input[type="text"] {
+    background: #1f2937 !important;
+    color: #ffffff !important;
+    border-color: #374151 !important;
+}
+body.dark-mode input[type="text"]::placeholder {
+    color: #6b7280 !important;
+}
+
+/* 5. تصميم الأزرار الرمادية (مثل أزرار التبديل بين الكورسات) */
+body.dark-mode button[style*="background: '#e0e5ec'"],
+body.dark-mode button[style*="background: '#f4f7f6'"] {
+    background: #374151 !important;
+    color: #e5e7eb !important;
 }
