@@ -30,6 +30,11 @@ export default function Navbar() {
                         
                         <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>المحاضرات</Link>
                         
+                        {/* === رابط الجدول الدراسي الجديد === */}
+                        <Link to="/schedule" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
+                            📅 الجدول
+                        </Link>
+                        
                         <Link to="/announcements" style={{ 
                             color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600',
                             display: 'flex', alignItems: 'center', gap: '5px'
@@ -37,7 +42,6 @@ export default function Navbar() {
                             📢 التبليغات
                         </Link>
                         
-                        {/* الاعتماد هنا فقط على الصلاحية من قاعدة البيانات */}
                         {user.isAdmin && (
                             <Link to="/upload" style={{ 
                                 background: '#00adb5', color: 'white', textDecoration: 'none', 
