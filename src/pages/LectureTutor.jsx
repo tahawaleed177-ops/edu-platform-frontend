@@ -39,8 +39,20 @@ export default function LectureTutor() {
                 const res = await axios.get('https://edu-platform-backend-alpha.vercel.app/api/materials', {
                     headers: { Authorization: `Bearer ${token}` } 
                 });
-                const materialsData = Array.isArray(res.data) ? res.data : (res.data.data || res.data.materials || []);
-                setMaterials(materialsData);
+                
+                // طباعة الاستجابة لمعرفة شكل البيانات القادمة من السيرفر
+                console.log("📦 البيانات القادمة من الباك إند:", res.data);
+
+                let fetchedMaterials = [];
+                if (Array.isArray(res.data)) {
+                    fetchedMaterials = res.data;
+                } else if (res.data && Array.isArray(res.data.data)) {
+                    fetchedMaterials = res.data.data;
+                } else if (res.data && Array.isArray(res.data.materials)) {
+                    fetchedMaterials = res.data.materials;
+                }
+
+                setMaterials(fetchedMaterials);
             } catch (error) {
                 console.error("خطأ في جلب المحاضرات:", error);
             }
@@ -112,7 +124,8 @@ export default function LectureTutor() {
                         <h4 style={{ color: '#00adb5', marginBottom: '15px', fontSize: '16px' }}>{courseName}</h4>
                         
                         {subjects.map(sub => {
-                            const subjectLectures = materials.filter(m => m.subject === sub);
+                            // التعديل هنا: استخدام trim() لتجاهل المسافات الزائدة في الأسماء
+                            const subjectLectures = materials.filter(m => m.subject && m.subject.trim() === sub.trim());
                             return (
                                 <div key={sub} style={{ marginBottom: '15px', paddingRight: '15px', borderRight: '2px solid #e2e8f0' }}>
                                     <strong style={{ fontSize: '14px', color: '#64748b' }}>📘 {sub}</strong>
