@@ -9,16 +9,18 @@ import ForgotPassword from './pages/ForgotPassword';
 import Announcements from './pages/Announcements';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import './App.css'; // تأكد من وجود هذا السطر
+import './App.css'; 
 import Favorites from './pages/Favorites';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
 import GPACalculator from './pages/GPACalculator';
+import MireoChat from './components/MireoChat';
+
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider> {/* <--- تمت الإضافة هنا لتغليف التطبيق */}
+      <ThemeProvider> 
         <Router>
           <Navbar />
           <Routes>
@@ -31,6 +33,7 @@ function App() {
             <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
             <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
             <Route path="/gpa-calculator" element={ <ProtectedRoute><GPACalculator /></ProtectedRoute> } />
+            
             {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
             <Route 
               path="/announcements" 
@@ -64,8 +67,12 @@ function App() {
             {/* في حال كتابة أي رابط خاطئ في المتصفح يتم توجيهه للصفحة الرئيسية */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+
+          {/* === تمت إضافة ميريو هنا لكي يظهر كأيقونة عائمة في جميع صفحات المنصة === */}
+          <MireoChat />
+
         </Router>
-      </ThemeProvider> {/* <--- الإغلاق هنا */}
+      </ThemeProvider> 
     </AuthProvider>
   );
 }
