@@ -1,15 +1,9 @@
 import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Navbar() {
-    const { user, logout } = useContext(AuthContext);
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        logout();
-        navigate('/'); // العودة لصفحة تسجيل الدخول
-    };
+    const { user } = useContext(AuthContext);
 
     return (
         <nav style={{ 
@@ -24,18 +18,25 @@ export default function Navbar() {
                     <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>تسجيل الدخول</Link>
                 ) : (
                     <>
-                        <span style={{ color: '#00adb5', fontSize: '14px' }}>
-                            مرحباً: {user.name || user.full_name || user.email}
-                        </span>
+                        {/* === رابط الملف الشخصي الجديد (بدلاً من الترحيب العادي) === */}
+                        <Link to="/profile" style={{ 
+                            display: 'flex', alignItems: 'center', gap: '8px', 
+                            background: '#19376D', padding: '6px 15px', borderRadius: '20px', 
+                            color: '#00adb5', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold',
+                            transition: '0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#112b59'}
+                        onMouseOut={(e) => e.currentTarget.style.background = '#19376D'}
+                        >
+                            👤 {user.name || user.full_name || 'حسابي'}
+                        </Link>
                         
                         <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>المحاضرات</Link>
                         
-                        {/* === رابط الجدول الدراسي === */}
                         <Link to="/schedule" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
                             📅 الجدول
                         </Link>
 
-                        {/* === رابط المفضلة الجديد === */}
                         <Link to="/favorites" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
                             ⭐ المفضلة
                         </Link>
@@ -56,10 +57,7 @@ export default function Navbar() {
                             </Link>
                         )}
 
-                        <button onClick={handleLogout} style={{
-                            background: 'transparent', border: '1px solid #ff4d4d', color: '#ff4d4d',
-                            padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
-                        }}>خروج</button>
+                        {/* تم حذف زر تسجيل الخروج من هنا لأنه أصبح داخل صفحة الملف الشخصي */}
                     </>
                 )}
             </div>

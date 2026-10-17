@@ -12,6 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import './App.css'; // تأكد من وجود هذا السطر
 import Favorites from './pages/Favorites';
 import Schedule from './pages/Schedule';
+import Profile from './pages/Profile';
 function App() {
   return (
     <AuthProvider>
@@ -25,6 +26,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/schedule" element={ <ProtectedRoute><Schedule /></ProtectedRoute> } />
           <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
+          <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
           {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
           <Route 
             path="/announcements" 
