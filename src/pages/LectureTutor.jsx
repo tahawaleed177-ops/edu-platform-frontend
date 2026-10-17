@@ -4,33 +4,34 @@ import ReactMarkdown from 'react-markdown';
 
 export default function LectureTutor() {
     const [materials, setMaterials] = useState([]);
-    const [selectedSubject, setSelectedSubject] = useState('');
-    const [selectedLecture, setSelectedLecture] = useState('');
+    const [selectedLectureId, setSelectedLectureId] = useState('');
     const [lectureText, setLectureText] = useState('');
     
     const [messages, setMessages] = useState([
-        { sender: 'mireo', text: 'أهلاً بك في مساحة الدراسة! اختر المادة ثم المحاضرة من القوائم أعلاه لكي أقوم بقراءتها ومناقشتها معك.' }
+        { sender: 'mireo', text: 'أهلاً بك! قم بوضع علامة (صح) بجانب أي محاضرة من القائمة الجانبية، وسأكون جاهزاً لشرحها ومناقشتها معك.' }
     ]);
     const [inputMsg, setInputMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // قائمة المواد الثابتة (Hardcoded Subjects) لتظهر دائماً في القائمة المنسدلة
-    const SUBJECTS_LIST = [
-        "برمجة كينونية",
-        "إلكترونيات رقمية",
-        "أساسيات شبكات الحاسوب",
-        "لغة عربية 1",
-        "رياضيات 3",
-        "أنظمة تشغيل",
-        "حقوق إنسان والديمقراطية",
-        "هيكلة بيانات" // يمكنك إضافة المزيد هنا إذا لزم الأمر
-    ];
+    // قائمة المواد مقسمة إلى كورسات
+    const COURSE_SUBJECTS = {
+        "📚 الكورس الأول": [
+            "برمجة كينونية", "إلكترونيات رقمية", "أساسيات شبكات الحاسوب",
+            "لغة عربية 1", "رياضيات 3", "أنظمة تشغيل", "حقوق إنسان والديمقراطية"
+        ],
+        "📘 الكورس الثاني": [
+            "هياكل بيانات", "معمارية الحاسوب", "تصميم منطقي متقدم",
+            "رياضيات 4", "لغة إنجليزية", "تطبيقات حاسوبية", "مجالات كهرومغناطيسية"
+        ]
+    };
 
+    // النزول التلقائي للمحادثة
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // جلب جميع المحاضرات من الباك إند
     useEffect(() => {
         const fetchMaterials = async () => {
             try {
@@ -47,25 +48,10 @@ export default function LectureTutor() {
         fetchMaterials();
     }, []);
 
-    // تصفية المحاضرات بناءً على المادة المختارة
-    const lecturesForSelectedSubject = materials.filter(m => m.subject === selectedSubject);
-
-    const handleSubjectChange = (e) => {
-        setSelectedSubject(e.target.value);
-        setSelectedLecture(''); 
-        setLectureText(''); 
-    };
-
-    const handleLectureChange = (e) => {
-        const lectureId = e.target.value;
-        setSelectedLecture(lectureId);
-        
-        const lecture = materials.find(m => m._id === lectureId);
-        if (lecture) {
-            setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط المحاضرة: ${lecture.url}\n\n(ملاحظة لميريو: هذه المحاضرة موجودة على الرابط أعلاه. إذا أراد الطالب شرحها بالتفصيل، يجب عليه نسخ نصها ولصقه هنا بدلاً من الرابط).`);
-        } else {
-            setLectureText('');
-        }
+    // دالة تتنفذ عند وضع صح على أي محاضرة
+    const handleLectureSelect = (lecture) => {
+        setSelectedLectureId(lecture._id);
+        setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط المحاضرة: ${lecture.url}\n\n(ملاحظة لميريو: هذه المحاضرة موجودة على الرابط أعلاه. إذا أراد الطالب شرحها بالتفصيل، يجب عليه نسخ نصها ولصقه هنا بدلاً من الرابط).`);
     };
 
     const sendMessage = async () => {
@@ -97,7 +83,7 @@ export default function LectureTutor() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 70px)', background: 'var(--bg-color, #f4f7f6)', padding: '20px', gap: '20px' }}>
+        <div style={{ display: 'flex', height: 'calc(100vh - 70px)', background: 'var(--bg-color, #f4f7f6)', padding: '20px', gap: '20px', flexWrap: 'wrap' }}>
             
             <style>
                 {`
@@ -105,82 +91,103 @@ export default function LectureTutor() {
                 .markdown-body code { font-family: monospace; background: #e2e8f0; color: #b91c1c; padding: 2px 5px; border-radius: 4px; }
                 body.dark-mode .markdown-body code { background: #334155; color: #fca5a5; }
                 body.dark-mode .tutor-box { background: #1f2937 !important; border-color: #374151 !important; color: white !important; }
-                body.dark-mode select { background: #374151 !important; color: white !important; border-color: #4b5563 !important; }
+                /* تنسيق شريط التمرير الجانبي */
+                .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+                .sidebar-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+                body.dark-mode .sidebar-scroll::-webkit-scrollbar-thumb { background: #4b5563; }
                 `}
             </style>
 
-            <div className="tutor-box" style={{ 
-                background: 'white', borderRadius: '15px', padding: '15px 25px', 
-                boxShadow: '0 4px 15px rgba(0,0,0,0.05)', display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap'
+            {/* === القسم الأول: القائمة الجانبية للمنهج (Sidebar) === */}
+            <div className="tutor-box sidebar-scroll" style={{ 
+                flex: '1 1 280px', maxWidth: '350px', background: 'white', borderRadius: '20px', 
+                padding: '20px', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column'
             }}>
-                <h3 style={{ margin: 0, color: '#0B2447' }}>📚 اختر المحاضرة:</h3>
-                
-                <select 
-                    value={selectedSubject} 
-                    onChange={handleSubjectChange}
-                    style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e0e5ec', outline: 'none', minWidth: '200px' }}
-                >
-                    <option value="">-- اختر المادة --</option>
-                    {SUBJECTS_LIST.map((sub, idx) => (
-                        <option key={idx} value={sub}>{sub}</option>
-                    ))}
-                </select>
+                <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', borderBottom: '2px solid #e2e8f0', paddingBottom: '15px' }}>
+                    📁 المنهج الدراسي
+                </h3>
 
-                <select 
-                    value={selectedLecture} 
-                    onChange={handleLectureChange}
-                    disabled={!selectedSubject}
-                    style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e0e5ec', outline: 'none', minWidth: '250px' }}
-                >
-                    <option value="">-- اختر المحاضرة --</option>
-                    {lecturesForSelectedSubject.length > 0 ? (
-                        lecturesForSelectedSubject.map(lecture => (
-                            <option key={lecture._id} value={lecture._id}>{lecture.title}</option>
-                        ))
-                    ) : (
-                        <option value="" disabled>لا توجد محاضرات مرفوعة لهذه المادة</option>
-                    )}
-                </select>
+                {Object.entries(COURSE_SUBJECTS).map(([courseName, subjects]) => (
+                    <div key={courseName} style={{ marginBottom: '25px' }}>
+                        <h4 style={{ color: '#00adb5', marginBottom: '15px', fontSize: '16px' }}>{courseName}</h4>
+                        
+                        {subjects.map(sub => {
+                            const subjectLectures = materials.filter(m => m.subject === sub);
+                            return (
+                                <div key={sub} style={{ marginBottom: '15px', paddingRight: '15px', borderRight: '2px solid #e2e8f0' }}>
+                                    <strong style={{ fontSize: '14px', color: '#64748b' }}>📘 {sub}</strong>
+                                    
+                                    <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {subjectLectures.length > 0 ? (
+                                            subjectLectures.map(lecture => (
+                                                <label key={lecture._id} style={{ 
+                                                    display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', 
+                                                    cursor: 'pointer', transition: '0.2s',
+                                                    color: selectedLectureId === lecture._id ? '#00adb5' : 'inherit',
+                                                    fontWeight: selectedLectureId === lecture._id ? 'bold' : 'normal'
+                                                }}>
+                                                    <input 
+                                                        type="radio" 
+                                                        name="lectureSelection" 
+                                                        checked={selectedLectureId === lecture._id}
+                                                        onChange={() => handleLectureSelect(lecture)}
+                                                        style={{ accentColor: '#00adb5', cursor: 'pointer', transform: 'scale(1.2)' }}
+                                                    />
+                                                    {lecture.title}
+                                                </label>
+                                            ))
+                                        ) : (
+                                            <span style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginRight: '5px' }}>- لا توجد محاضرات -</span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
             </div>
 
-            <div style={{ display: 'flex', gap: '20px', flex: 1, overflow: 'hidden', flexWrap: 'wrap' }}>
+            {/* === القسم الثاني: مساحة الدراسة والمحادثة === */}
+            <div style={{ flex: '2 1 500px', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+                
+                {/* صندوق نص المحاضرة */}
                 <div className="tutor-box" style={{ 
-                    flex: '1 1 45%', background: 'white', borderRadius: '20px', padding: '20px', 
+                    flex: '0 0 35%', background: 'white', borderRadius: '20px', padding: '20px', 
                     boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' 
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <h3 style={{ margin: 0, color: '#00adb5' }}>📄 محتوى المحاضرة الحالي</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <h3 style={{ margin: 0, color: '#00adb5', fontSize: '16px' }}>📄 محتوى المحاضرة المحددة</h3>
                     </div>
-                    <p style={{ fontSize: '13px', color: '#888', marginTop: 0 }}>
-                        ملاحظة هامة: بما أن المنصة تدعم رفع روابط PDF أو YouTube، فقد لا يستطيع ميريو قراءة محتوى الرابط مباشرة. 
-                        يفضل نسخ النصوص الهامة من الـ PDF ولصقها هنا ليتمكن من شرحها بدقة.
+                    <p style={{ fontSize: '12px', color: '#888', marginTop: 0, marginBottom: '10px' }}>
+                        (قم بوضع (صح) على أي محاضرة من القائمة الجانبية. لملفات الـ PDF، يفضل لصق النص هنا ليتمكن ميريو من قراءته بدقة).
                     </p>
                     
                     <textarea 
                         value={lectureText}
                         onChange={(e) => setLectureText(e.target.value)}
-                        placeholder="اختر محاضرة من الأعلى، أو قم بلصق نص المحاضرة يدوياً هنا..."
-                        className="tutor-box"
+                        placeholder="سيظهر المحتوى هنا بمجرد تحديدك لمحاضرة..."
+                        className="tutor-box sidebar-scroll"
                         style={{ 
                             flex: 1, width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #e0e5ec', 
-                            resize: 'none', fontSize: '15px', lineHeight: '1.6', outline: 'none', background: '#f8fafc'
+                            resize: 'none', fontSize: '14px', lineHeight: '1.6', outline: 'none', background: '#f8fafc'
                         }}
                     />
                 </div>
 
+                {/* صندوق المحادثة مع ميريو */}
                 <div className="tutor-box" style={{ 
-                    flex: '1 1 45%', background: 'white', borderRadius: '20px', 
+                    flex: 1, background: 'white', borderRadius: '20px', 
                     boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden'
                 }}>
-                    <div style={{ background: '#0B2447', color: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ fontSize: '30px' }}>🤖</div>
+                    <div style={{ background: '#0B2447', color: 'white', padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ fontSize: '26px' }}>🤖</div>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '18px' }}>مناقشة المحاضرة مع ميريو</h3>
-                            <p style={{ margin: 0, fontSize: '12px', color: '#00adb5' }}>ميريو جاهز لشرح المحتوى المجاور</p>
+                            <h3 style={{ margin: 0, fontSize: '16px' }}>مناقشة المحاضرة مع ميريو</h3>
+                            <p style={{ margin: 0, fontSize: '11px', color: '#00adb5' }}>ميريو جاهز لشرح المحتوى الذي تحدده من القائمة</p>
                         </div>
                     </div>
 
-                    <div style={{ flex: 1, padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div className="sidebar-scroll" style={{ flex: 1, padding: '20px', overflowY: 'auto', background: 'rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         {messages.map((msg, index) => (
                             <div key={index} style={{
                                 alignSelf: msg.sender === 'user' ? 'flex-start' : 'flex-end',
