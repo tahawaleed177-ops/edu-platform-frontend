@@ -53,9 +53,14 @@ export default function Navbar() {
                             📅 الجدول
                         </Link>
 
-                        {/* === رابط الحاسبة الجديد === */}
+                        {/* === رابط الحاسبة === */}
                         <Link to="/gpa-calculator" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
                             📊 الحاسبة
+                        </Link>
+
+                        {/* === رابط منصة الدراسة التفاعلية الجديد === */}
+                        <Link to="/lecture-tutor" style={{ color: '#FFD700', textDecoration: 'none', fontSize: '15px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            🧠 شرح المحاضرات
                         </Link>
 
                         <Link to="/favorites" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>

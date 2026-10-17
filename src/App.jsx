@@ -16,7 +16,7 @@ import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
 import GPACalculator from './pages/GPACalculator';
 import MireoChat from './components/MireoChat';
-
+import LectureTutor from './pages/LectureTutor';
 function App() {
   return (
     <AuthProvider>
@@ -33,7 +33,7 @@ function App() {
             <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
             <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
             <Route path="/gpa-calculator" element={ <ProtectedRoute><GPACalculator /></ProtectedRoute> } />
-            
+            <Route path="/lecture-tutor" element={ <ProtectedRoute><LectureTutor /></ProtectedRoute> } />
             {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
             <Route 
               path="/announcements" 
