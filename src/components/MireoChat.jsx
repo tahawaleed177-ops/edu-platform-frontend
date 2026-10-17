@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 export default function MireoChat() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { sender: 'mireo', text: 'مرحباً! أنا ميريو 🤖 مساعدك الذكي لهندسة الحاسوب. كيف يمكنني مساعدتك اليوم؟ يمكنك سؤالي أو إرفاق ملف لكي أشرحه لك.' }
+        { sender: 'mireo', text: 'مرحباً بك! أنا ميريو 🤖 مساعدك الذكي لهندسة الحاسوب. كيف يمكنني مساعدتك اليوم؟ يمكنك سؤالي أو إرفاق ملف لكي أشرحه لك.' }
     ]);
     const [inputMsg, setInputMsg] = useState('');
     const [attachedFileText, setAttachedFileText] = useState(null);
@@ -14,12 +14,10 @@ export default function MireoChat() {
     
     const messagesEndRef = useRef(null);
 
-    // النزول التلقائي لأسفل المحادثة عند وصول رسالة جديدة
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // قراءة محتوى الملف المرفق (يدعم الملفات النصية، الأكواد، الخ)
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -29,7 +27,6 @@ export default function MireoChat() {
         reader.onload = (event) => {
             setAttachedFileText(event.target.result);
         };
-        // قراءة الملف كنص
         reader.readAsText(file);
     };
 
@@ -39,7 +36,6 @@ export default function MireoChat() {
         const userMsg = inputMsg;
         const fileContext = attachedFileText;
         
-        // عرض رسالة الطالب مع اسم الملف في واجهة المحادثة
         let displayMsg = userMsg;
         if (fileName) displayMsg += `\n\n📎 [ملف مرفق: ${fileName}]`;
         
@@ -50,19 +46,18 @@ export default function MireoChat() {
         setIsLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
             const res = await axios.post('https://edu-platform-backend-alpha.vercel.app/api/chat', {
                 prompt: userMsg,
                 fileText: fileContext
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (res.data.success) {
                 setMessages(prev => [...prev, { sender: 'mireo', text: res.data.reply }]);
             }
         } catch (error) {
-            setMessages(prev => [...prev, { sender: 'mireo', text: 'عذراً، حدث خطأ في الاتصال. حاول مرة أخرى لاحقاً 😔' }]);
+            // جلب رسالة الخطأ الدقيقة من الباك إند
+            const errorMsg = error.response?.data?.message || 'عذراً، حدث خطأ في الاتصال. حاول مرة أخرى لاحقاً 😔';
+            setMessages(prev => [...prev, { sender: 'mireo', text: errorMsg }]);
         } finally {
             setIsLoading(false);
         }
@@ -70,8 +65,6 @@ export default function MireoChat() {
 
     return (
         <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 1000 }}>
-            
-            {/* الأيقونة العائمة لفتح/إغلاق المحادثة */}
             <button 
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
@@ -86,7 +79,6 @@ export default function MireoChat() {
                 {isOpen ? '✕' : '🤖'}
             </button>
 
-            {/* نافذة المحادثة */}
             {isOpen && (
                 <div style={{
                     position: 'absolute', bottom: '85px', right: '0', width: '380px', height: '550px',
@@ -98,20 +90,17 @@ export default function MireoChat() {
                         {`
                         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
                         .markdown-body { font-size: 14px; line-height: 1.6; }
-                        /* تنسيق الأكواد داخل المحادثة */
                         .markdown-body pre { background: #1e293b; color: #f8fafc; padding: 10px; border-radius: 8px; overflow-x: auto; direction: ltr; margin: 10px 0; }
                         .markdown-body code { font-family: monospace; }
                         body:not(.dark-mode) .markdown-body code { background: #e2e8f0; color: #b91c1c; padding: 2px 5px; border-radius: 4px; }
                         body.dark-mode .markdown-body code { background: #334155; color: #fca5a5; padding: 2px 5px; border-radius: 4px; }
                         
-                        /* توافق نافذة المحادثة مع الوضع الليلي */
                         body.dark-mode .mireo-window { background: #1f2937 !important; border-color: #374151 !important; }
                         body.dark-mode .mireo-input-area { background: #111827 !important; border-color: #374151 !important; }
                         body.dark-mode .mireo-input { background: #1f2937 !important; color: white !important; border-color: #374151 !important; }
                         `}
                     </style>
 
-                    {/* رأس النافذة */}
                     <div style={{ background: '#0B2447', color: 'white', padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ fontSize: '30px' }}>🤖</div>
                         <div>
@@ -120,7 +109,6 @@ export default function MireoChat() {
                         </div>
                     </div>
 
-                    {/* منطقة الرسائل */}
                     <div className="mireo-window" style={{ flex: 1, padding: '20px', overflowY: 'auto', background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         {messages.map((msg, index) => (
                             <div key={index} style={{
@@ -149,7 +137,6 @@ export default function MireoChat() {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {/* منطقة الإدخال وإرفاق الملفات */}
                     <div className="mireo-input-area" style={{ padding: '15px', background: 'white', borderTop: '1px solid #e0e5ec' }}>
                         {fileName && (
                             <div style={{ fontSize: '12px', color: '#00adb5', marginBottom: '8px', display: 'flex', gap: '5px' }}>
@@ -162,7 +149,7 @@ export default function MireoChat() {
                                 📎
                                 <input type="file" accept=".txt,.js,.cpp,.html,.json,.csv" style={{ display: 'none' }} onChange={handleFileUpload} />
                             </label>
-                            
+
                             <input 
                                 className="mireo-input"
                                 type="text" 
@@ -172,7 +159,7 @@ export default function MireoChat() {
                                 placeholder="اسأل ميريو..."
                                 style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e0e5ec', outline: 'none' }}
                             />
-                            
+
                             <button 
                                 onClick={sendMessage}
                                 disabled={isLoading}
