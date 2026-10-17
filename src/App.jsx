@@ -14,7 +14,7 @@ import Favorites from './pages/Favorites';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
-
+import GPACalculator from './pages/GPACalculator';
 function App() {
   return (
     <AuthProvider>
@@ -30,7 +30,7 @@ function App() {
             <Route path="/schedule" element={ <ProtectedRoute><Schedule /></ProtectedRoute> } />
             <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
             <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
-            
+            <Route path="/gpa-calculator" element={ <ProtectedRoute><GPACalculator /></ProtectedRoute> } />
             {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
             <Route 
               path="/announcements" 

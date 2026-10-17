@@ -53,6 +53,11 @@ export default function Navbar() {
                             📅 الجدول
                         </Link>
 
+                        {/* === رابط الحاسبة الجديد === */}
+                        <Link to="/gpa-calculator" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
+                            📊 الحاسبة
+                        </Link>
+
                         <Link to="/favorites" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
                             ⭐ المفضلة
                         </Link>
