@@ -7,21 +7,23 @@ export default function Schedule() {
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
+    
+    // حالة للتحكم في المجموعة المعروضة (GA أو GB)
+    const [activeGroup, setActiveGroup] = useState('GA');
 
-    // حالة نموذج الإضافة (للمشرفين فقط)
     const [formData, setFormData] = useState({
         day_index: '0',
         day_name: 'الأحد',
         subject_name: '',
         start_time: '',
         end_time: '',
-        location: ''
+        location: '',
+        group_name: 'الكل' // الافتراضي هو الكل
     });
 
     const isAdmin = user?.isAdmin || (localStorage.getItem('user') && JSON.parse(localStorage.getItem('user')).isAdmin);
     const API_URL = 'https://edu-platform-backend-alpha.vercel.app/api/schedule';
 
-    // تحديث الوقت كل دقيقة لضمان تفاعل الجدول
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
@@ -44,9 +46,8 @@ export default function Schedule() {
         }
     };
 
-    // التحقق مما إذا كانت المحاضرة فعالة الآن (اللون الأخضر)
     const isCurrentSession = (dayIndex, startTime, endTime) => {
-        const currentDay = currentTime.getDay(); // 0 = Sunday, 1 = Monday...
+        const currentDay = currentTime.getDay();
         if (currentDay !== parseInt(dayIndex)) return false;
 
         const [startHour, startMin] = startTime.split(':').map(Number);
@@ -62,7 +63,6 @@ export default function Schedule() {
         return nowTimeInMins >= startTimeInMins && nowTimeInMins <= endTimeInMins;
     };
 
-    // دوال المشرفين (إضافة وحذف)
     const handleDayChange = (e) => {
         const selectedIndex = e.target.value;
         const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -77,7 +77,7 @@ export default function Schedule() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchSchedule();
-            setFormData({ ...formData, subject_name: '', start_time: '', end_time: '', location: '' });
+            setFormData({ ...formData, subject_name: '', start_time: '', end_time: '', location: '', group_name: 'الكل' });
             alert('تمت إضافة المحاضرة بنجاح!');
         } catch (error) {
             alert('حدث خطأ أثناء الإضافة');
@@ -97,8 +97,12 @@ export default function Schedule() {
         }
     };
 
-    // تجميع المحاضرات حسب الأيام
-    const groupedSchedule = schedule.reduce((acc, curr) => {
+    // فلترة المحاضرات حسب المجموعة المختارة (وإظهار المشتركة دائماً)
+    const filteredSchedule = schedule.filter(item => 
+        item.group_name === activeGroup || item.group_name === 'الكل'
+    );
+
+    const groupedSchedule = filteredSchedule.reduce((acc, curr) => {
         if (!acc[curr.day_name]) acc[curr.day_name] = [];
         acc[curr.day_name].push(curr);
         return acc;
@@ -108,28 +112,59 @@ export default function Schedule() {
 
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 20px', minHeight: '85vh' }}>
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h2 style={{ color: '#0B2447', fontSize: '32px', fontWeight: '900', margin: '0 0 10px 0' }}>📅 الجدول الدراسي التفاعلي</h2>
-                <p style={{ color: '#666' }}>يتم تظليل المحاضرة الحالية باللون الأخضر تلقائياً</p>
+            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <h2 style={{ color: '#0B2447', fontSize: '32px', fontWeight: '900', margin: '0 0 10px 0' }}>📅 الجدول الدراسي</h2>
+            </div>
+
+            {/* أزرار التبديل بين GA و GB */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '40px' }}>
+                <button 
+                    onClick={() => setActiveGroup('GA')}
+                    style={{ 
+                        padding: '12px 30px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px', cursor: 'pointer', border: 'none', transition: '0.3s',
+                        background: activeGroup === 'GA' ? '#00adb5' : '#e0e0e0',
+                        color: activeGroup === 'GA' ? 'white' : '#555',
+                        boxShadow: activeGroup === 'GA' ? '0 4px 10px rgba(0,173,181,0.3)' : 'none'
+                    }}>
+                    مجموعة GA
+                </button>
+                <button 
+                    onClick={() => setActiveGroup('GB')}
+                    style={{ 
+                        padding: '12px 30px', fontSize: '18px', fontWeight: 'bold', borderRadius: '30px', cursor: 'pointer', border: 'none', transition: '0.3s',
+                        background: activeGroup === 'GB' ? '#0B2447' : '#e0e0e0',
+                        color: activeGroup === 'GB' ? 'white' : '#555',
+                        boxShadow: activeGroup === 'GB' ? '0 4px 10px rgba(11,36,71,0.3)' : 'none'
+                    }}>
+                    مجموعة GB
+                </button>
             </div>
 
             {isAdmin && (
-                <form onSubmit={handleSubmit} style={{ background: 'white', padding: '20px', borderRadius: '12px', marginBottom: '40px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'grid', gap: '15px', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-                    <select value={formData.day_index} onChange={handleDayChange} style={{ padding: '10px', borderRadius: '8px' }} required>
+                <form onSubmit={handleSubmit} style={{ background: 'white', padding: '20px', borderRadius: '12px', marginBottom: '40px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'grid', gap: '15px', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+                    <select value={formData.day_index} onChange={handleDayChange} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} required>
                         {daysOrder.map((day, index) => <option key={index} value={index}>{day}</option>)}
                     </select>
-                    <input type="text" placeholder="اسم المادة" value={formData.subject_name} onChange={e => setFormData({...formData, subject_name: e.target.value})} style={{ padding: '10px', borderRadius: '8px' }} required />
-                    <input type="time" title="وقت البداية" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} style={{ padding: '10px', borderRadius: '8px' }} required />
-                    <input type="time" title="وقت النهاية" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} style={{ padding: '10px', borderRadius: '8px' }} required />
-                    <input type="text" placeholder="القاعة / المختبر" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} style={{ padding: '10px', borderRadius: '8px' }} required />
-                    <button type="submit" style={{ background: '#00adb5', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+ إضافة للجدول</button>
+                    
+                    {/* اختيار المجموعة للمحاضرة الجديدة */}
+                    <select value={formData.group_name} onChange={e => setFormData({...formData, group_name: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} required>
+                        <option value="الكل">الكل (مشتركة)</option>
+                        <option value="GA">مجموعة GA فقط</option>
+                        <option value="GB">مجموعة GB فقط</option>
+                    </select>
+
+                    <input type="text" placeholder="اسم المادة" value={formData.subject_name} onChange={e => setFormData({...formData, subject_name: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} required />
+                    <input type="time" title="وقت البداية" value={formData.start_time} onChange={e => setFormData({...formData, start_time: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} required />
+                    <input type="time" title="وقت النهاية" value={formData.end_time} onChange={e => setFormData({...formData, end_time: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} required />
+                    <input type="text" placeholder="القاعة / المختبر" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }} required />
+                    <button type="submit" style={{ background: '#00adb5', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>+ إضافة</button>
                 </form>
             )}
 
             {loading ? (
-                <p style={{ textAlign: 'center' }}>جاري التحميل...</p>
+                <p style={{ textAlign: 'center', color: '#00adb5', fontWeight: 'bold' }}>جاري التحميل...</p>
             ) : Object.keys(groupedSchedule).length === 0 ? (
-                <p style={{ textAlign: 'center', color: '#888' }}>الجدول فارغ حالياً.</p>
+                <p style={{ textAlign: 'center', color: '#888', background: 'white', padding: '20px', borderRadius: '12px' }}>لا توجد محاضرات لهذه المجموعة.</p>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                     {daysOrder.map(day => {
@@ -152,15 +187,20 @@ export default function Schedule() {
                                             }}>
                                                 <div style={{ flex: '1', minWidth: '200px' }}>
                                                     <h3 style={{ margin: '0 0 5px 0', color: active ? '#2e7d32' : '#333' }}>{session.subject_name}</h3>
-                                                    <span style={{ color: '#666', fontSize: '14px' }}>📍 {session.location}</span>
+                                                    <span style={{ color: '#666', fontSize: '14px' }}>
+                                                        📍 {session.location} 
+                                                        <span style={{ marginLeft: '10px', background: '#eee', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                                                            {session.group_name === 'الكل' ? '👥 مشتركة' : `👤 ${session.group_name}`}
+                                                        </span>
+                                                    </span>
                                                 </div>
                                                 <div style={{ fontSize: '16px', fontWeight: 'bold', color: active ? '#2e7d32' : '#0B2447', background: active ? '#c8e6c9' : '#e0e0e0', padding: '5px 15px', borderRadius: '20px' }}>
                                                     {session.start_time} - {session.end_time}
                                                 </div>
                                                 {isAdmin && (
-                                                    <button onClick={() => handleDelete(session.id)} style={{ background: '#ffebee', color: '#c62828', border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}>حذف</button>
+                                                    <button onClick={() => handleDelete(session.id)} style={{ background: '#ffebee', color: '#c62828', border: 'none', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>حذف</button>
                                                 )}
-                                                {active && <span style={{ position: 'absolute', top: '-10px', right: '15px', background: '#4CAF50', color: 'white', fontSize: '12px', padding: '2px 8px', borderRadius: '10px' }}>محاضرة الآن</span>}
+                                                {active && <span style={{ position: 'absolute', top: '-10px', right: '15px', background: '#4CAF50', color: 'white', fontSize: '12px', padding: '3px 10px', borderRadius: '10px', fontWeight: 'bold' }}>🔴 محاضرة الآن</span>}
                                             </div>
                                         );
                                     })}
