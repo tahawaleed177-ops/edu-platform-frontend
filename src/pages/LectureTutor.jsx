@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import { AuthContext } from '../context/AuthContext';
 
 export default function LectureTutor() {
+    const { user } = useContext(AuthContext);
     const [materials, setMaterials] = useState([]);
     const [selectedLectureId, setSelectedLectureId] = useState('');
     const [lectureText, setLectureText] = useState('');
@@ -14,15 +16,24 @@ export default function LectureTutor() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // قائمة المواد مقسمة إلى كورسات
+    // نفس قائمة المواد الموجودة في الـ Dashboard (مع المعرفات)
     const COURSE_SUBJECTS = {
         "📚 الكورس الأول": [
-            "برمجة كينونية", "إلكترونيات رقمية", "أساسيات شبكات الحاسوب",
-            "لغة عربية 1", "رياضيات 3", "أنظمة تشغيل", "جرائم حزب البعث"
+            { id: 1, name: 'أساسيات شبكات الحاسوب' },
+            { id: 2, name: 'إلكترونيات رقمية' },
+            { id: 3, name: 'برمجة كينونية' },
+            { id: 4, name: 'أنظمة تشغيل' },
+            { id: 5, name: 'رياضيات 3' },
+            { id: 6, name: 'لغة عربية 1' },
+            { id: 7, name: 'جرائم حزب البعث' }
         ],
         "📘 الكورس الثاني": [
-            "هياكل بيانات", "معمارية الحاسوب", "تصميم منطقي متقدم",
-            "رياضيات 4", "لغة إنجليزية", "تطبيقات حاسوبية", "مجالات كهرومغناطيسية"
+            { id: 8, name: 'شبكات حاسوب متقدمة' },
+            { id: 9, name: 'معمارية الحاسوب' },
+            { id: 10, name: 'هياكل البيانات' },
+            { id: 11, name: 'أنظمة قواعد البيانات' },
+            { id: 12, name: 'رياضيات 4' },
+            { id: 13, name: 'لغة إنكليزية' }
         ]
     };
 
@@ -31,39 +42,45 @@ export default function LectureTutor() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // جلب جميع المحاضرات من الباك إند
+    // جلب جميع المحاضرات لكل المواد بنفس طريقة הـ Dashboard
     useEffect(() => {
-        const fetchMaterials = async () => {
+        const fetchAllMaterials = async () => {
+            let allFetchedMaterials = [];
+            
+            // نجمع كل أرقام المواد
+            const allSubjectIds = [
+                ...COURSE_SUBJECTS["📚 الكورس الأول"].map(s => s.id),
+                ...COURSE_SUBJECTS["📘 الكورس الثاني"].map(s => s.id)
+            ];
+
             try {
-                const token = localStorage.getItem('token'); 
-                const res = await axios.get('https://edu-platform-backend-alpha.vercel.app/api/materials', {
-                    headers: { Authorization: `Bearer ${token}` } 
-                });
-                
-                // طباعة الاستجابة لمعرفة شكل البيانات القادمة من السيرفر
-                console.log("📦 البيانات القادمة من الباك إند:", res.data);
-
-                let fetchedMaterials = [];
-                if (Array.isArray(res.data)) {
-                    fetchedMaterials = res.data;
-                } else if (res.data && Array.isArray(res.data.data)) {
-                    fetchedMaterials = res.data.data;
-                } else if (res.data && Array.isArray(res.data.materials)) {
-                    fetchedMaterials = res.data.materials;
+                // سنجلب المحاضرات مادة بمادة، تماماً كما يعمل الـ Dashboard
+                for (let subjectId of allSubjectIds) {
+                    try {
+                        const response = await axios.get(`https://edu-platform-backend-alpha.vercel.app/api/materials/subject/${subjectId}`);
+                        if (response.data.success && response.data.materials) {
+                            allFetchedMaterials = [...allFetchedMaterials, ...response.data.materials];
+                        }
+                    } catch (err) {
+                        // نتجاهل الخطأ إذا لم تكن هناك محاضرات لمادة معينة
+                    }
                 }
-
-                setMaterials(fetchedMaterials);
+                
+                console.log("📦 المحاضرات المجلوبة:", allFetchedMaterials);
+                setMaterials(allFetchedMaterials);
+                
             } catch (error) {
                 console.error("خطأ في جلب المحاضرات:", error);
             }
         };
-        fetchMaterials();
+
+        fetchAllMaterials();
     }, []);
 
     // دالة تتنفذ عند وضع صح على أي محاضرة
     const handleLectureSelect = (lecture) => {
-        setSelectedLectureId(lecture._id);
-        setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط المحاضرة: ${lecture.url}\n\n(ملاحظة لميريو: هذه المحاضرة موجودة على الرابط أعلاه. إذا أراد الطالب شرحها بالتفصيل، يجب عليه نسخ نصها ولصقه هنا بدلاً من الرابط).`);
+        setSelectedLectureId(lecture.id);
+        setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط الملف: ${lecture.fileUrl}\n\n(ملاحظة لميريو: هذه المحاضرة موجودة على الرابط أعلاه. إذا أراد الطالب شرحها بالتفصيل، يجب عليه نسخ نصها ولصقه هنا بدلاً من الرابط).`);
     };
 
     const sendMessage = async () => {
@@ -75,7 +92,7 @@ export default function LectureTutor() {
         setIsLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
+            const token = user?.token || localStorage.getItem('token');
             const res = await axios.post('https://edu-platform-backend-alpha.vercel.app/api/chat', {
                 prompt: userMsg,
                 fileText: lectureText 
@@ -124,25 +141,25 @@ export default function LectureTutor() {
                         <h4 style={{ color: '#00adb5', marginBottom: '15px', fontSize: '16px' }}>{courseName}</h4>
                         
                         {subjects.map(sub => {
-                            // التعديل هنا: استخدام trim() لتجاهل المسافات الزائدة في الأسماء
-                            const subjectLectures = materials.filter(m => m.subject && m.subject.trim() === sub.trim());
+                            // التصفية بناءً على المعرف (id) وليس الاسم، كما هو في لوحة التحكم
+                            const subjectLectures = materials.filter(m => m.subject_id === sub.id || m.subjectId === sub.id || m.subject === sub.id);
                             return (
-                                <div key={sub} style={{ marginBottom: '15px', paddingRight: '15px', borderRight: '2px solid #e2e8f0' }}>
-                                    <strong style={{ fontSize: '14px', color: '#64748b' }}>📘 {sub}</strong>
+                                <div key={sub.id} style={{ marginBottom: '15px', paddingRight: '15px', borderRight: '2px solid #e2e8f0' }}>
+                                    <strong style={{ fontSize: '14px', color: '#64748b' }}>📘 {sub.name}</strong>
                                     
                                     <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {subjectLectures.length > 0 ? (
                                             subjectLectures.map(lecture => (
-                                                <label key={lecture._id} style={{ 
+                                                <label key={lecture.id} style={{ 
                                                     display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', 
                                                     cursor: 'pointer', transition: '0.2s',
-                                                    color: selectedLectureId === lecture._id ? '#00adb5' : 'inherit',
-                                                    fontWeight: selectedLectureId === lecture._id ? 'bold' : 'normal'
+                                                    color: selectedLectureId === lecture.id ? '#00adb5' : 'inherit',
+                                                    fontWeight: selectedLectureId === lecture.id ? 'bold' : 'normal'
                                                 }}>
                                                     <input 
                                                         type="radio" 
                                                         name="lectureSelection" 
-                                                        checked={selectedLectureId === lecture._id}
+                                                        checked={selectedLectureId === lecture.id}
                                                         onChange={() => handleLectureSelect(lecture)}
                                                         style={{ accentColor: '#00adb5', cursor: 'pointer', transform: 'scale(1.2)' }}
                                                     />
