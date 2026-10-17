@@ -10,6 +10,7 @@ import Announcements from './pages/Announcements';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css'; // تأكد من وجود هذا السطر
+import Favorites from './pages/Favorites';
 import Schedule from './pages/Schedule';
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/schedule" element={ <ProtectedRoute><Schedule /></ProtectedRoute> } />
+          <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
           {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
           <Route 
             path="/announcements" 

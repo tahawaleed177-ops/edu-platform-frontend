@@ -30,9 +30,14 @@ export default function Navbar() {
                         
                         <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>المحاضرات</Link>
                         
-                        {/* === رابط الجدول الدراسي الجديد === */}
+                        {/* === رابط الجدول الدراسي === */}
                         <Link to="/schedule" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
                             📅 الجدول
+                        </Link>
+
+                        {/* === رابط المفضلة الجديد === */}
+                        <Link to="/favorites" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>
+                            ⭐ المفضلة
                         </Link>
                         
                         <Link to="/announcements" style={{ 
