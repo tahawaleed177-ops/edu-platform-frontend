@@ -1,11 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function MaterialCard({ material, isAdmin, onDelete, onPreview }) {
-    // التعديل السحري: فحص الرابط أولاً
-    // إذا كان يبدأ بـ http (مثل روابط Supabase) نستخدمه كما هو، وإلا ندمجه مع رابط الباك إند
+    // حالة (State) لتتبع ما إذا كانت المحاضرة في المفضلة أم لا
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [loadingFav, setLoadingFav] = useState(false);
+
     const fullFileUrl = material.file_url?.startsWith('http')
         ? material.file_url
         : `https://edu-platform-backend-alpha.vercel.app${material.file_url?.startsWith('/') ? material.file_url : `/\${material.file_url}`}`;
+
+    // التحقق عند تحميل الكارت إذا كانت المحاضرة محفوظة مسبقاً (مفيدة في صفحة المفضلة)
+    useEffect(() => {
+        // إذا كنا نعرض الكارت داخل صفحة "المفضلة"، فهي بالضرورة مفضلة
+        if (window.location.pathname === '/favorites') {
+            setIsFavorite(true);
+        }
+    }, []);
+
+    // دالة إضافة أو إزالة المحاضرة من المفضلة
+    const toggleFavorite = async () => {
+        setLoadingFav(true);
+        try {
+            const token = localStorage.getItem('token');
+            const API_URL = 'https://edu-platform-backend-alpha.vercel.app/api/favorites';
+
+            if (isFavorite) {
+                // إزالة من المفضلة
+                await axios.delete(`${API_URL}/${material.id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setIsFavorite(false);
+                // إذا كنا في صفحة المفضلة وقمنا بالإزالة، نُخفي الكارت فوراً لتحديث الواجهة
+                if (window.location.pathname === '/favorites') {
+                    window.location.reload(); 
+                }
+            } else {
+                // إضافة للمفضلة
+                await axios.post(API_URL, { material_id: material.id }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setIsFavorite(true);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            alert('حدث خطأ أثناء تعديل المفضلة');
+        } finally {
+            setLoadingFav(false);
+        }
+    };
 
     return (
         <div 
@@ -25,8 +68,26 @@ export default function MaterialCard({ material, isAdmin, onDelete, onPreview })
         >
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                    <h4 style={{ color: '#0B2447', fontSize: '18px', marginBottom: '10px', marginTop: 0 }}>
+                    <h4 style={{ color: '#0B2447', fontSize: '18px', marginBottom: '10px', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         📄 {material.title}
+                        
+                        {/* === زر المفضلة (النجمة) === */}
+                        <button 
+                            onClick={toggleFavorite}
+                            disabled={loadingFav}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                fontSize: '20px',
+                                cursor: loadingFav ? 'wait' : 'pointer',
+                                padding: '0 5px',
+                                transition: '0.2s',
+                                color: isFavorite ? '#FFD700' : '#ccc' // ذهبي إذا مفضلة، رمادي إذا لا
+                            }}
+                            title={isFavorite ? "إزالة من المراجعات" : "حفظ للمراجعة"}
+                        >
+                            {isFavorite ? '⭐' : '☆'}
+                        </button>
                     </h4>
 
                     {/* زر الحذف يظهر للمدير فقط */}
