@@ -1,9 +1,11 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext'; // <-- استيراد سياق الوضع الليلي
 
 export default function Navbar() {
     const { user } = useContext(AuthContext);
+    const { isDarkMode, toggleTheme } = useContext(ThemeContext); // <-- جلب حالة الثيم من السياق
 
     return (
         <nav style={{ 
@@ -18,7 +20,21 @@ export default function Navbar() {
                     <Link to="/" style={{ color: 'white', textDecoration: 'none', fontSize: '15px', fontWeight: '600' }}>تسجيل الدخول</Link>
                 ) : (
                     <>
-                        {/* === رابط الملف الشخصي الجديد (بدلاً من الترحيب العادي) === */}
+                        {/* === زر التبديل بين الوضع الليلي والنهاري === */}
+                        <button 
+                            onClick={toggleTheme} 
+                            style={{ 
+                                background: 'rgba(255,255,255,0.1)', border: 'none', 
+                                fontSize: '18px', cursor: 'pointer', padding: '6px 10px', 
+                                borderRadius: '50%', transition: '0.3s',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                            title={isDarkMode ? "الوضع النهاري" : "الوضع الليلي"}
+                        >
+                            {isDarkMode ? '☀️' : '🌙'}
+                        </button>
+
+                        {/* === رابط الملف الشخصي === */}
                         <Link to="/profile" style={{ 
                             display: 'flex', alignItems: 'center', gap: '8px', 
                             background: '#19376D', padding: '6px 15px', borderRadius: '20px', 
@@ -56,8 +72,6 @@ export default function Navbar() {
                                 + إضافة محاضرة
                             </Link>
                         )}
-
-                        {/* تم حذف زر تسجيل الخروج من هنا لأنه أصبح داخل صفحة الملف الشخصي */}
                     </>
                 )}
             </div>

@@ -13,54 +13,59 @@ import './App.css'; // تأكد من وجود هذا السطر
 import Favorites from './pages/Favorites';
 import Schedule from './pages/Schedule';
 import Profile from './pages/Profile';
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Navbar />
-        <Routes>
-          {/* الروابط العامة (مفتوحة للجميع) */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/schedule" element={ <ProtectedRoute><Schedule /></ProtectedRoute> } />
-          <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
-          <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
-          {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
-          <Route 
-            path="/announcements" 
-            element={
-              <ProtectedRoute>
-                <Announcements />
-              </ProtectedRoute>
-            } 
-          />
+      <ThemeProvider> {/* <--- تمت الإضافة هنا لتغليف التطبيق */}
+        <Router>
+          <Navbar />
+          <Routes>
+            {/* الروابط العامة (مفتوحة للجميع) */}
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/schedule" element={ <ProtectedRoute><Schedule /></ProtectedRoute> } />
+            <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
+            <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
+            
+            {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
+            <Route 
+              path="/announcements" 
+              element={
+                <ProtectedRoute>
+                  <Announcements />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* رابط رفع المحاضرات (محمي: يتطلب تسجيل الدخول + صلاحية أدمن حصراً) */}
-          <Route
-            path="/upload"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <UploadMaterial />
-              </ProtectedRoute>
-            }
-          />
+            {/* رابط رفع المحاضرات (محمي: يتطلب تسجيل الدخول + صلاحية أدمن حصراً) */}
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <UploadMaterial />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* في حال كتابة أي رابط خاطئ في المتصفح يتم توجيهه للصفحة الرئيسية */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+            {/* في حال كتابة أي رابط خاطئ في المتصفح يتم توجيهه للصفحة الرئيسية */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider> {/* <--- الإغلاق هنا */}
     </AuthProvider>
   );
 }

@@ -246,3 +246,40 @@
         padding: 12px !important;
     }
 }
+/* تأثير انتقال ناعم عند تبديل الوضع */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* === ألوان الوضع الليلي === */
+body.dark-mode {
+    background-color: #0f172a !important; /* لون الخلفية الرئيسي الداكن */
+    color: #e2e8f0 !important;
+}
+
+/* تحويل كل المربعات البيضاء في المنصة إلى اللون الداكن */
+body.dark-mode div[style*="background: white"],
+body.dark-mode div[style*="background: '#fcfdfe'"],
+body.dark-mode div[style*="background: '#f9fcfe'"],
+body.dark-mode div[style*="background: '#f0fdf4'"] {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+}
+
+/* تعديل ألوان النصوص والعناوين لتصبح فاتحة */
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode h4,
+body.dark-mode p {
+    color: #f1f5f9 !important;
+}
+
+/* تعديل حقول البحث والإدخال */
+body.dark-mode input, 
+body.dark-mode select {
+    background: #1e293b !important;
+    color: white !important;
+    border-color: #334155 !important;
+}
