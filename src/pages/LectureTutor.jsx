@@ -15,27 +15,31 @@ export default function LectureTutor() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // النزول التلقائي للمحادثة
+    // قائمة المواد الثابتة (Hardcoded Subjects) لتظهر دائماً في القائمة المنسدلة
+    const SUBJECTS_LIST = [
+        "برمجة كينونية",
+        "إلكترونيات رقمية",
+        "أساسيات شبكات الحاسوب",
+        "لغة عربية 1",
+        "رياضيات 3",
+        "أنظمة تشغيل",
+        "حقوق إنسان والديمقراطية",
+        "هيكلة بيانات" // يمكنك إضافة المزيد هنا إذا لزم الأمر
+    ];
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // جلب جميع المحاضرات من الباك إند عند فتح الصفحة مع إرسال التوكن
     useEffect(() => {
         const fetchMaterials = async () => {
             try {
-                // 1. جلب التوكن الخاص بالطالب المسجل دخوله
                 const token = localStorage.getItem('token'); 
-                
-                // 2. إرسال التوكن مع الطلب لتخطي الحماية
                 const res = await axios.get('https://edu-platform-backend-alpha.vercel.app/api/materials', {
                     headers: { Authorization: `Bearer ${token}` } 
                 });
-                
-                // 3. التأكد من استخراج مصفوفة المحاضرات بشكل صحيح
                 const materialsData = Array.isArray(res.data) ? res.data : (res.data.data || res.data.materials || []);
                 setMaterials(materialsData);
-                
             } catch (error) {
                 console.error("خطأ في جلب المحاضرات:", error);
             }
@@ -43,27 +47,21 @@ export default function LectureTutor() {
         fetchMaterials();
     }, []);
 
-    // استخراج قائمة المواد الفريدة (بدون تكرار)
-    const uniqueSubjects = [...new Set(materials.map(m => m.subject))];
-
-    // المحاضرات الخاصة بالمادة التي اختارها الطالب
+    // تصفية المحاضرات بناءً على المادة المختارة
     const lecturesForSelectedSubject = materials.filter(m => m.subject === selectedSubject);
 
-    // عندما يختار الطالب مادة معينة
     const handleSubjectChange = (e) => {
         setSelectedSubject(e.target.value);
-        setSelectedLecture(''); // تصفير المحاضرة
-        setLectureText(''); // تصفير النص
+        setSelectedLecture(''); 
+        setLectureText(''); 
     };
 
-    // عندما يختار الطالب المحاضرة، نعرض محتواها إذا كان نصاً، أو رابطها إذا كانت PDF
     const handleLectureChange = (e) => {
         const lectureId = e.target.value;
         setSelectedLecture(lectureId);
         
         const lecture = materials.find(m => m._id === lectureId);
         if (lecture) {
-            // تنبيه: ميريو يحتاج النص لكي يفهمه. إذا كانت المحاضرة رابط PDF، نطلب من الطالب نسخ محتواها.
             setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط المحاضرة: ${lecture.url}\n\n(ملاحظة لميريو: هذه المحاضرة موجودة على الرابط أعلاه. إذا أراد الطالب شرحها بالتفصيل، يجب عليه نسخ نصها ولصقه هنا بدلاً من الرابط).`);
         } else {
             setLectureText('');
@@ -82,7 +80,7 @@ export default function LectureTutor() {
             const token = localStorage.getItem('token');
             const res = await axios.post('https://edu-platform-backend-alpha.vercel.app/api/chat', {
                 prompt: userMsg,
-                fileText: lectureText // إرسال النص الذي تم اختياره
+                fileText: lectureText 
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -111,7 +109,6 @@ export default function LectureTutor() {
                 `}
             </style>
 
-            {/* شريط اختيار المادة والمحاضرة */}
             <div className="tutor-box" style={{ 
                 background: 'white', borderRadius: '15px', padding: '15px 25px', 
                 boxShadow: '0 4px 15px rgba(0,0,0,0.05)', display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap'
@@ -124,7 +121,7 @@ export default function LectureTutor() {
                     style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e0e5ec', outline: 'none', minWidth: '200px' }}
                 >
                     <option value="">-- اختر المادة --</option>
-                    {uniqueSubjects.map((sub, idx) => (
+                    {SUBJECTS_LIST.map((sub, idx) => (
                         <option key={idx} value={sub}>{sub}</option>
                     ))}
                 </select>
@@ -136,16 +133,17 @@ export default function LectureTutor() {
                     style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e0e5ec', outline: 'none', minWidth: '250px' }}
                 >
                     <option value="">-- اختر المحاضرة --</option>
-                    {lecturesForSelectedSubject.map(lecture => (
-                        <option key={lecture._id} value={lecture._id}>{lecture.title}</option>
-                    ))}
+                    {lecturesForSelectedSubject.length > 0 ? (
+                        lecturesForSelectedSubject.map(lecture => (
+                            <option key={lecture._id} value={lecture._id}>{lecture.title}</option>
+                        ))
+                    ) : (
+                        <option value="" disabled>لا توجد محاضرات مرفوعة لهذه المادة</option>
+                    )}
                 </select>
             </div>
 
-            {/* مساحة الدراسة والمحادثة */}
             <div style={{ display: 'flex', gap: '20px', flex: 1, overflow: 'hidden', flexWrap: 'wrap' }}>
-                
-                {/* النصف الأول: محتوى المحاضرة */}
                 <div className="tutor-box" style={{ 
                     flex: '1 1 45%', background: 'white', borderRadius: '20px', padding: '20px', 
                     boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' 
@@ -170,7 +168,6 @@ export default function LectureTutor() {
                     />
                 </div>
 
-                {/* النصف الثاني: محادثة ميريو */}
                 <div className="tutor-box" style={{ 
                     flex: '1 1 45%', background: 'white', borderRadius: '20px', 
                     boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', overflow: 'hidden'
