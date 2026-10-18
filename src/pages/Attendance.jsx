@@ -19,7 +19,6 @@ export default function Attendance() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data.success) {
-                // إضافة خاصية "الحالة" الافتراضية كـ "غائب" لكل طالب
                 const studentsWithStatus = res.data.students.map(s => ({ ...s, status: 'غائب' }));
                 setStudents(studentsWithStatus);
             }
@@ -29,25 +28,32 @@ export default function Attendance() {
         }
     };
 
-    // تشغيل الكاميرا
+    // تشغيل الكاميرا ومطابقة الباركود (سواء كان يحتوي على الإيميل أو الـ ID)
     useEffect(() => {
         let scanner;
         if (isScanning) {
             scanner = new Html5QrcodeScanner("reader", { fps: 5, qrbox: { width: 250, height: 250 } }, false);
             scanner.render(
                 (decodedText) => {
-                    // عند مسح الباركود، نبحث عن الـ ID الخاص بالطالب ونحوله لـ "حاضر"
+                    const cleanScan = decodedText.trim().toLowerCase();
                     setStudents(prev => {
-                        const updated = prev.map(s => s.id.toString() === decodedText ? { ...s, status: 'حاضر' } : s);
-                        // تشغيل صوت نجاح (اختياري)
-                        if(prev.find(s => s.id.toString() === decodedText && s.status === 'غائب')) {
+                        let matchedNew = false;
+                        const updated = prev.map(s => {
+                            const isMatch = s.id?.toString() === cleanScan || s.email?.trim().toLowerCase() === cleanScan;
+                            if (isMatch && s.status === 'غائب') {
+                                matchedNew = true;
+                            }
+                            return isMatch ? { ...s, status: 'حاضر' } : s;
+                        });
+
+                        if (matchedNew) {
                             const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
                             audio.play().catch(e => console.log(e));
                         }
                         return updated;
                     });
                 },
-                (error) => { /* تجاهل الأخطاء المستمرة أثناء عدم العثور على باركود */ }
+                (error) => { /* تجاهل أخطاء المسح المستمرة */ }
             );
         }
         return () => {
@@ -55,7 +61,7 @@ export default function Attendance() {
         };
     }, [isScanning]);
 
-    // التبديل اليدوي للحالة (في حال نسى الطالب هاتفه)
+    // التبديل اليدوي للحالة
     const toggleStatus = (id) => {
         setStudents(prev => prev.map(s => s.id === id ? { ...s, status: s.status === 'غائب' ? 'حاضر' : 'غائب' } : s));
     };
@@ -67,7 +73,7 @@ export default function Attendance() {
 
     // تصفير القائمة
     const resetList = () => {
-        if(window.confirm('هل أنت متأكد من تصفير قائمة الحضور وبدء محاضرة جديدة؟')) {
+        if (window.confirm('هل أنت متأكد من تصفير قائمة الحضور وبدء محاضرة جديدة؟')) {
             setStudents(prev => prev.map(s => ({ ...s, status: 'غائب' })));
         }
     };
@@ -77,7 +83,6 @@ export default function Attendance() {
     return (
         <div style={{ maxWidth: '900px', margin: '40px auto', padding: '20px', fontFamily: 'system-ui' }}>
             
-            {/* قسم الإعدادات (يختفي عند الطباعة) */}
             <div className="no-print" style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
                 <h2 style={{ color: '#0B2447', marginBottom: '20px' }}>📸 نظام تسجيل الحضور الذكي</h2>
                 
@@ -99,11 +104,9 @@ export default function Attendance() {
                     </div>
                 )}
 
-                {/* مربع الكاميرا */}
                 {isScanning && <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '20px auto', border: '2px solid #059669', borderRadius: '12px', overflow: 'hidden' }}></div>}
             </div>
 
-            {/* القائمة التي ستتم طباعتها كـ PDF */}
             {students.length > 0 && (
                 <div style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                     <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
@@ -138,7 +141,6 @@ export default function Attendance() {
                         </tbody>
                     </table>
 
-                    {/* أزرار الطباعة والتصفير */}
                     <div className="no-print" style={{ marginTop: '30px', display: 'flex', gap: '15px', justifyContent: 'center' }}>
                         <button onClick={handlePrint} style={{ padding: '12px 25px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>🖨️ طباعة أو حفظ كـ PDF</button>
                         <button onClick={resetList} style={{ padding: '12px 25px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>🔄 تصفير القائمة</button>
@@ -146,7 +148,6 @@ export default function Attendance() {
                 </div>
             )}
 
-            {/* CSS مخصص لإخفاء الأزرار عند الطباعة */}
             <style>{`
                 @media print {
                     body * { visibility: hidden; }

@@ -150,6 +150,9 @@ export default function Profile() {
 
     if (!user) return <div style={{textAlign: 'center', padding: '50px', color: '#00adb5'}}>جاري التحميل...</div>;
 
+    // القيمة المشفرة داخل الباركود (تعتمد على الإيميل أو الـ ID لضمان عملها دائماً)
+    const qrValue = (email || user?.email || user?.id?.toString() || 'student').trim().toLowerCase();
+
     return (
         <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px', minHeight: '80vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
             <div style={{ textAlign: 'center', marginBottom: '30px' }}>
@@ -170,7 +173,7 @@ export default function Profile() {
                 </div>
 
                 {/* قسم الإحصائيات والمعلومات */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '40px', flexWrap: 'wrap', textAlign: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap', textAlign: 'center' }}>
                     
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
                         <h3 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '30px' }}>{completedCount}</h3>
@@ -193,34 +196,34 @@ export default function Profile() {
 
                 </div>
 
-                {/* === هوية الحضور الذكية (الباركود) بالزر - تظهر للجميع === */}
-                {user?.id && (
-                    <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px', marginTop: '20px' }}>
-                        <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية</h3>
-                        
-                        {!showQR ? (
-                            <button 
-                                onClick={() => setShowQR(true)}
-                                style={{ padding: '12px 25px', background: '#00adb5', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px' }}
-                            >
-                                إظهار الباركود الخاص بي 📷
-                            </button>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-                                <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
-                                    <QRCode value={user?.id?.toString() || 'unknown'} size={150} />
-                                </div>
-                                <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
-                                <button 
-                                    onClick={() => setShowQR(false)}
-                                    style={{ padding: '8px 20px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
-                                >
-                                    إخفاء الباركود
-                                </button>
+                {/* === هوية الحضور الذكية (تظهر للجميع دائماً بدون أي شروط إخفاء) === */}
+                <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية</h3>
+                    
+                    {!showQR ? (
+                        <button 
+                            type="button"
+                            onClick={() => setShowQR(true)}
+                            style={{ padding: '12px 25px', background: '#00adb5', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '5px' }}
+                        >
+                            إظهار الباركود الخاص بي 📷
+                        </button>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                            <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
+                                <QRCode value={qrValue} size={160} />
                             </div>
-                        )}
-                    </div>
-                )}
+                            <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
+                            <button 
+                                type="button"
+                                onClick={() => setShowQR(false)}
+                                style={{ padding: '8px 20px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
+                            >
+                                إخفاء الباركود
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* رسائل التنبيه */}
                 {message.text && (
