@@ -60,8 +60,13 @@ export default function LectureTutor() {
 
     const handleLectureSelect = (lecture) => {
         setSelectedLectureId(lecture.id);
-        setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط الملف: ${lecture.fileUrl}\n\nالنص الخاص بالمحاضرة للمناقشة: \n`);
-        setMessages([{ sender: 'mireo', text: `تم تحديد محاضرة "${lecture.title}". كيف يمكنني مساعدتك بها؟` }]);
+        setLectureText(`عنوان المحاضرة: ${lecture.title}\nرابط الملف: ${lecture.fullFileUrl || lecture.url || lecture.fileUrl}\n\nالنص الخاص بالمحاضرة للمناقشة: \n`);
+        
+        // التعديل هنا: نحن نضيف رسالة للمحادثة السابقة بدلاً من مسحها لتظل المحادثة كاملة!
+        setMessages(prev => [
+            ...prev, 
+            { sender: 'mireo', text: `تم تحديد محاضرة "${lecture.title}". كيف يمكنني مساعدتك بها؟` }
+        ]);
     };
 
     const handleClearChat = () => {
