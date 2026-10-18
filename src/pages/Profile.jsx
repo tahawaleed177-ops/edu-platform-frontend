@@ -23,7 +23,7 @@ export default function Profile() {
     const [adminMessage, setAdminMessage] = useState({ text: '', type: '' });
     const [isAdminLoading, setIsAdminLoading] = useState(false);
     
-    // 4. حالة إظهار/إخفاء الباركود (جديد 👈)
+    // 4. حالة إظهار/إخفاء الباركود
     const [showQR, setShowQR] = useState(false);
 
     // حالات واجهة المستخدم العامة
@@ -193,8 +193,8 @@ export default function Profile() {
 
                 </div>
 
-                {/* === هوية الحضور الذكية (الباركود) بالزر - تظهر للطالب العادي === */}
-                {(user?.isAdmin === false || !user?.isAdmin) && user?.id && (
+                {/* === هوية الحضور الذكية (الباركود) بالزر - تظهر للجميع === */}
+                {user?.id && (
                     <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px', marginTop: '20px' }}>
                         <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية</h3>
                         
