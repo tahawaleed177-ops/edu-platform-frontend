@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "axios": "^1.20.0",
+    "html5-qrcode": "^2.3.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
+    "react-qr-code": "^2.2.0",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
