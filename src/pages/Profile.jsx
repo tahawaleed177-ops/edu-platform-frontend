@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import QRCode from 'react-qr-code'; // 👈 استيراد مكتبة الباركود
+import QRCode from 'react-qr-code'; 
 
 export default function Profile() {
     const { user, logout, dispatch } = useContext(AuthContext);
@@ -23,6 +23,9 @@ export default function Profile() {
     const [adminMessage, setAdminMessage] = useState({ text: '', type: '' });
     const [isAdminLoading, setIsAdminLoading] = useState(false);
     
+    // 4. حالة إظهار/إخفاء الباركود (جديد 👈)
+    const [showQR, setShowQR] = useState(false);
+
     // حالات واجهة المستخدم العامة
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
@@ -56,7 +59,7 @@ export default function Profile() {
         fetchStats();
     }, [user]);
 
-    // دالة تحديث البيانات (الاسم، نوع الدراسة، الشعبة)
+    // دالة تحديث البيانات
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -121,7 +124,7 @@ export default function Profile() {
         }
     };
 
-    // === دالة إدارة المشرفين ===
+    // دالة إدارة المشرفين
     const handleAdminToggle = async (makeAdmin) => {
         if (!targetEmail.trim()) return;
         setIsAdminLoading(true);
@@ -190,16 +193,32 @@ export default function Profile() {
 
                 </div>
 
-                {/* === هوية الحضور الذكية (الباركود) - تظهر للطالب العادي === */}
-                {/* قمنا بتعديل الشرط لضمان ظهوره للطلاب فقط، حتى لو اختلفت تركيبة كائن user */}
+                {/* === هوية الحضور الذكية (الباركود) بالزر - تظهر للطالب العادي === */}
                 {(user?.isAdmin === false || !user?.isAdmin) && user?.id && (
                     <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px', marginTop: '20px' }}>
-                        <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية (الباركود)</h3>
-                        <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
-                            {/* نستخدم التشفير الاختياري لمنع أي أخطاء في حال تأخر جلب الـ ID */}
-                            <QRCode value={user?.id?.toString() || 'unknown'} size={150} />
-                        </div>
-                        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '12px', marginBottom: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
+                        <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية</h3>
+                        
+                        {!showQR ? (
+                            <button 
+                                onClick={() => setShowQR(true)}
+                                style={{ padding: '12px 25px', background: '#00adb5', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '10px' }}
+                            >
+                                إظهار الباركود الخاص بي 📷
+                            </button>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
+                                    <QRCode value={user?.id?.toString() || 'unknown'} size={150} />
+                                </div>
+                                <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
+                                <button 
+                                    onClick={() => setShowQR(false)}
+                                    style={{ padding: '8px 20px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
+                                >
+                                    إخفاء الباركود
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
