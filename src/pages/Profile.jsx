@@ -8,13 +8,16 @@ export default function Profile() {
     // 1. حالة الإحصائيات
     const [completedCount, setCompletedCount] = useState(0);
 
-    // 2. حالات تعديل البيانات وكلمة المرور
+    // 2. حالات تعديل البيانات الأكاديمية وكلمة المرور
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [studyType, setStudyType] = useState(''); // حالة نوع الدراسة (جديد)
+    const [section, setSection] = useState('');     // حالة الشعبة (جديد)
+    
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     
-    // 3. حالات لوحة إدارة المشرفين (الجديدة)
+    // 3. حالات لوحة إدارة المشرفين
     const [targetEmail, setTargetEmail] = useState('');
     const [adminMessage, setAdminMessage] = useState({ text: '', type: '' });
     const [isAdminLoading, setIsAdminLoading] = useState(false);
@@ -23,11 +26,13 @@ export default function Profile() {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
-    // تعيين البيانات الأولية للمستخدم عند التحميل
+    // تعيين البيانات الأولية للمستخدم عند التحميل (بما فيها الدراسة والشعبة)
     useEffect(() => {
         if (user) {
             setName(user.name || user.full_name || '');
             setEmail(user.email || '');
+            setStudyType(user.studyType || ''); // جلب نوع الدراسة من التوكن
+            setSection(user.section || '');     // جلب الشعبة من التوكن
         }
     }, [user]);
 
@@ -50,7 +55,7 @@ export default function Profile() {
         fetchStats();
     }, [user]);
 
-    // دالة تحديث الاسم
+    // دالة تحديث البيانات (الاسم، نوع الدراسة، الشعبة)
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -59,19 +64,24 @@ export default function Profile() {
         try {
             const token = user?.token || localStorage.getItem('token');
             const res = await axios.put('https://edu-platform-backend-alpha.vercel.app/api/users/profile', 
-                { name }, 
+                { name, study_type: studyType, section }, // إرسال البيانات الجديدة
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (res.data.success) {
-                setMessage({ text: 'تم تحديث الاسم بنجاح!', type: 'success' });
+                setMessage({ text: 'تم تحديث البيانات بنجاح!', type: 'success' });
+                
+                // تحديث البيانات في التخزين المحلي لكي تبقى بعد التحديث
                 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
                 storedUser.name = name;
+                storedUser.studyType = studyType;
+                storedUser.section = section;
                 localStorage.setItem('user', JSON.stringify(storedUser));
                 localStorage.setItem('userName', name);
                 
+                // تحديث الـ Context ليتغير في الواجهة فوراً
                 if (dispatch) {
-                    dispatch({ type: 'UPDATE_USER', payload: { ...user, name } });
+                    dispatch({ type: 'UPDATE_USER', payload: { ...user, name, studyType, section } });
                 }
             }
         } catch (error) {
@@ -112,7 +122,7 @@ export default function Profile() {
         }
     };
 
-    // === دالة إدارة المشرفين الجديدة ===
+    // === دالة إدارة المشرفين ===
     const handleAdminToggle = async (makeAdmin) => {
         if (!targetEmail.trim()) return;
         setIsAdminLoading(true);
@@ -127,7 +137,7 @@ export default function Profile() {
 
             if (res.data.success) {
                 setAdminMessage({ text: res.data.message, type: 'success' });
-                setTargetEmail(''); // تفريغ الحقل بعد النجاح
+                setTargetEmail(''); 
             }
         } catch (error) {
             setAdminMessage({ text: error.response?.data?.message || 'حدث خطأ أثناء تعديل الصلاحيات.', type: 'error' });
@@ -146,7 +156,7 @@ export default function Profile() {
 
             <div style={{ background: 'white', borderRadius: '24px', padding: '40px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                 
-                {/* معلومات المستخدم */}
+                {/* معلومات المستخدم الأساسية */}
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                         {user.isAdmin ? '👨‍🏫' : '👨‍💻'}
@@ -157,19 +167,31 @@ export default function Profile() {
                     <p style={{ color: '#666', fontSize: '16px', margin: '0 0 30px 0' }}>{email}</p>
                 </div>
 
-                {/* قسم الإحصائيات */}
+                {/* قسم الإحصائيات والمعلومات */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '40px', flexWrap: 'wrap', textAlign: 'center' }}>
-                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', flex: '1', minWidth: '150px' }}>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '36px' }}>{completedCount}</h3>
+                    
+                    {/* الإنجازات */}
+                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '30px' }}>{completedCount}</h3>
                         <p style={{ margin: 0, color: '#15803d', fontWeight: 'bold' }}>محاضرة مكتملة ✅</p>
                     </div>
                     
-                    <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '20px', borderRadius: '16px', flex: '1', minWidth: '150px' }}>
-                        <h3 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '24px', paddingTop: '10px' }}>
-                            {user.isAdmin ? 'مدير منصة' : 'طالب مرحلة 2'}
+                    {/* البيانات الأكاديمية (الجديدة) */}
+                    <div style={{ background: '#fef3c7', border: '1px solid #fde68a', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#b45309', fontSize: '20px', paddingTop: '10px' }}>
+                            {studyType || 'غير محدد'} - {section || '?'}
                         </h3>
-                        <p style={{ margin: 0, color: '#1d4ed8', fontWeight: 'bold' }}>نوع الحساب 🎓</p>
+                        <p style={{ margin: 0, color: '#d97706', fontWeight: 'bold' }}>التصنيف 🎓</p>
                     </div>
+
+                    {/* نوع الحساب */}
+                    <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '20px', paddingTop: '10px' }}>
+                            {user.isAdmin ? 'مدير منصة' : 'طالب'}
+                        </h3>
+                        <p style={{ margin: 0, color: '#1d4ed8', fontWeight: 'bold' }}>نوع الحساب 🛡️</p>
+                    </div>
+
                 </div>
 
                 {/* رسائل التنبيه العادية */}
@@ -182,17 +204,38 @@ export default function Profile() {
                 {/* قسم التعديلات والإعدادات */}
                 <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', marginBottom: '10px' }}>
                     
-                    {/* تعديل الاسم */}
+                    {/* تعديل البيانات الأكاديمية */}
                     <form onSubmit={handleUpdateProfile} style={{ flex: '1 1 300px', background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                        <h3 style={{ margin: '0 0 20px 0', color: '#0B2447', fontSize: '18px' }}>تعديل البيانات</h3>
-                        <div style={{ marginBottom: '20px' }}>
+                        <h3 style={{ margin: '0 0 20px 0', color: '#0B2447', fontSize: '18px' }}>البيانات الأكاديمية</h3>
+                        
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px' }}>الاسم الكامل</label>
                             <input 
-                                type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="الاسم الكامل"
+                                type="text" value={name} onChange={(e) => setName(e.target.value)} required 
                                 style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none' }} 
                             />
                         </div>
+
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px' }}>نوع الدراسة</label>
+                            <select value={studyType} onChange={(e) => setStudyType(e.target.value)} style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', backgroundColor: 'white' }}>
+                                <option value="" disabled>-- اختر نوع الدراسة --</option>
+                                <option value="صباحي">دراسة صباحية</option>
+                                <option value="استضافة">استضافة</option>
+                            </select>
+                        </div>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px' }}>الشعبة (الكروب)</label>
+                            <select value={section} onChange={(e) => setSection(e.target.value)} style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none', backgroundColor: 'white' }}>
+                                <option value="" disabled>-- اختر الشعبة --</option>
+                                <option value="GA">GA</option>
+                                <option value="GB">GB</option>
+                            </select>
+                        </div>
+
                         <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '12px', background: '#0B2447', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '15px', cursor: isLoading ? 'not-allowed' : 'pointer' }}>
-                            {isLoading ? 'جاري الحفظ...' : 'حفظ الاسم'}
+                            {isLoading ? 'جاري الحفظ...' : 'حفظ التعديلات'}
                         </button>
                     </form>
 
