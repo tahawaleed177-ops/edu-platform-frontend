@@ -3,19 +3,23 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
 export default function Profile() {
-    // جلب الدوال والبيانات من الـ Context
     const { user, logout, dispatch } = useContext(AuthContext);
     
-    // حالة الإحصائيات
+    // 1. حالة الإحصائيات
     const [completedCount, setCompletedCount] = useState(0);
 
-    // حالات تعديل البيانات وكلمة المرور
+    // 2. حالات تعديل البيانات وكلمة المرور
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     
-    // حالات واجهة المستخدم
+    // 3. حالات لوحة إدارة المشرفين (الجديدة)
+    const [targetEmail, setTargetEmail] = useState('');
+    const [adminMessage, setAdminMessage] = useState({ text: '', type: '' });
+    const [isAdminLoading, setIsAdminLoading] = useState(false);
+    
+    // حالات واجهة المستخدم العامة
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -27,7 +31,7 @@ export default function Profile() {
         }
     }, [user]);
 
-    // جلب عدد المحاضرات المكتملة لعرضها في الإحصائيات
+    // جلب عدد المحاضرات المكتملة
     useEffect(() => {
         const fetchStats = async () => {
             try {
@@ -61,13 +65,11 @@ export default function Profile() {
 
             if (res.data.success) {
                 setMessage({ text: 'تم تحديث الاسم بنجاح!', type: 'success' });
-                // تحديث الـ LocalStorage
                 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
                 storedUser.name = name;
                 localStorage.setItem('user', JSON.stringify(storedUser));
                 localStorage.setItem('userName', name);
                 
-                // إذا كان لديك dispatch في AuthContext لتحديث الحالة
                 if (dispatch) {
                     dispatch({ type: 'UPDATE_USER', payload: { ...user, name } });
                 }
@@ -110,6 +112,30 @@ export default function Profile() {
         }
     };
 
+    // === دالة إدارة المشرفين الجديدة ===
+    const handleAdminToggle = async (makeAdmin) => {
+        if (!targetEmail.trim()) return;
+        setIsAdminLoading(true);
+        setAdminMessage({ text: '', type: '' });
+
+        try {
+            const token = user?.token || localStorage.getItem('token');
+            const res = await axios.put('https://edu-platform-backend-alpha.vercel.app/api/users/admin-role', 
+                { email: targetEmail, makeAdmin }, 
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (res.data.success) {
+                setAdminMessage({ text: res.data.message, type: 'success' });
+                setTargetEmail(''); // تفريغ الحقل بعد النجاح
+            }
+        } catch (error) {
+            setAdminMessage({ text: error.response?.data?.message || 'حدث خطأ أثناء تعديل الصلاحيات.', type: 'error' });
+        } finally {
+            setIsAdminLoading(false);
+        }
+    };
+
     if (!user) return <div style={{textAlign: 'center', padding: '50px', color: '#00adb5'}}>جاري التحميل...</div>;
 
     return (
@@ -120,7 +146,7 @@ export default function Profile() {
 
             <div style={{ background: 'white', borderRadius: '24px', padding: '40px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                 
-                {/* الهيدر ومعلومات المستخدم */}
+                {/* معلومات المستخدم */}
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                         {user.isAdmin ? '👨‍🏫' : '👨‍💻'}
@@ -131,38 +157,37 @@ export default function Profile() {
                     <p style={{ color: '#666', fontSize: '16px', margin: '0 0 30px 0' }}>{email}</p>
                 </div>
 
-                {/* === قسم الإحصائيات === */}
+                {/* قسم الإحصائيات */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '40px', flexWrap: 'wrap', textAlign: 'center' }}>
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', flex: '1', minWidth: '150px' }}>
-                        <h3 style={{ margin: 0, color: '#166534', fontSize: '36px' }}>{completedCount}</h3>
-                        <p style={{ margin: '5px 0 0 0', color: '#15803d', fontWeight: 'bold' }}>محاضرة مكتملة ✅</p>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '36px' }}>{completedCount}</h3>
+                        <p style={{ margin: 0, color: '#15803d', fontWeight: 'bold' }}>محاضرة مكتملة ✅</p>
                     </div>
                     
                     <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '20px', borderRadius: '16px', flex: '1', minWidth: '150px' }}>
-                        <h3 style={{ margin: 0, color: '#1e40af', fontSize: '24px', paddingTop: '10px' }}>
+                        <h3 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '24px', paddingTop: '10px' }}>
                             {user.isAdmin ? 'مدير منصة' : 'طالب مرحلة 2'}
                         </h3>
-                        <p style={{ margin: '10px 0 0 0', color: '#1d4ed8', fontWeight: 'bold' }}>نوع الحساب 🎓</p>
+                        <p style={{ margin: 0, color: '#1d4ed8', fontWeight: 'bold' }}>نوع الحساب 🎓</p>
                     </div>
                 </div>
 
-                {/* رسائل التنبيه (نجاح أو خطأ) */}
+                {/* رسائل التنبيه العادية */}
                 {message.text && (
                     <div style={{ padding: '15px', borderRadius: '12px', marginBottom: '30px', fontSize: '15px', fontWeight: 'bold', textAlign: 'center', background: message.type === 'success' ? '#f0fdf4' : '#fef2f2', color: message.type === 'success' ? '#166534' : '#991b1b', border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
                         {message.type === 'success' ? '✅ ' : '❌ '} {message.text}
                     </div>
                 )}
 
-                {/* === قسم التعديلات والإعدادات === */}
-                <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', marginBottom: '40px' }}>
+                {/* قسم التعديلات والإعدادات */}
+                <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', marginBottom: '10px' }}>
                     
                     {/* تعديل الاسم */}
                     <form onSubmit={handleUpdateProfile} style={{ flex: '1 1 300px', background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                         <h3 style={{ margin: '0 0 20px 0', color: '#0B2447', fontSize: '18px' }}>تعديل البيانات</h3>
                         <div style={{ marginBottom: '20px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px' }}>الاسم الكامل</label>
                             <input 
-                                type="text" value={name} onChange={(e) => setName(e.target.value)} required 
+                                type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="الاسم الكامل"
                                 style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '15px', outline: 'none' }} 
                             />
                         </div>
@@ -190,8 +215,50 @@ export default function Profile() {
                             {isLoading ? 'جاري التحديث...' : 'تغيير كلمة المرور'}
                         </button>
                     </form>
-
                 </div>
+
+                {/* === لوحة إدارة المشرفين (تظهر للمديرين فقط) === */}
+                {user?.isAdmin && (
+                    <div style={{ background: '#fffbeb', padding: '25px', borderRadius: '16px', border: '1px solid #fde68a', margin: '30px 0' }}>
+                        <h3 style={{ margin: '0 0 20px 0', color: '#b45309', fontSize: '18px', fontWeight: 'bold' }}>👑 لوحة الإدارة: صلاحيات المشرفين</h3>
+                        
+                        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                            <div style={{ flex: '1 1 250px' }}>
+                                <input 
+                                    type="email" 
+                                    value={targetEmail} 
+                                    onChange={(e) => setTargetEmail(e.target.value)} 
+                                    placeholder="أدخل البريد الإلكتروني للمستخدم..." 
+                                    style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #fcd34d', fontSize: '15px', outline: 'none' }} 
+                                />
+                            </div>
+                            
+                            <div style={{ display: 'flex', gap: '10px', flex: '1 1 auto' }}>
+                                <button 
+                                    onClick={() => handleAdminToggle(true)} 
+                                    disabled={isAdminLoading || !targetEmail} 
+                                    style={{ flex: 1, padding: '12px', background: '#059669', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: isAdminLoading || !targetEmail ? 'not-allowed' : 'pointer' }}
+                                >
+                                    ترقية لمدير
+                                </button>
+                                <button 
+                                    onClick={() => handleAdminToggle(false)} 
+                                    disabled={isAdminLoading || !targetEmail} 
+                                    style={{ flex: 1, padding: '12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: isAdminLoading || !targetEmail ? 'not-allowed' : 'pointer' }}
+                                >
+                                    إلغاء الإشراف
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* رسالة نجاح/فشل الترقية */}
+                        {adminMessage.text && (
+                            <div style={{ marginTop: '15px', padding: '10px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center', color: adminMessage.type === 'success' ? '#065f46' : '#991b1b', background: adminMessage.type === 'success' ? '#d1fae5' : '#fee2e2', border: `1px solid ${adminMessage.type === 'success' ? '#a7f3d0' : '#fecaca'}` }}>
+                                {adminMessage.text}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* زر تسجيل الخروج */}
                 <div style={{ textAlign: 'center', borderTop: '2px solid #f1f5f9', paddingTop: '30px' }}>
@@ -202,8 +269,6 @@ export default function Profile() {
                             padding: '15px 30px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold',
                             cursor: 'pointer', transition: '0.2s', width: '100%', maxWidth: '300px'
                         }}
-                        onMouseOver={(e) => e.target.style.background = '#fecaca'}
-                        onMouseOut={(e) => e.target.style.background = '#fee2e2'}
                     >
                         🚪 تسجيل الخروج
                     </button>
