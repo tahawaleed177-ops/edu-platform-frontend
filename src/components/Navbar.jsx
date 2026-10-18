@@ -74,13 +74,24 @@ export default function Navbar() {
                             📢 التبليغات
                         </Link>
                         
+                        {/* === أزرار الإدارة (تظهر للمديرين فقط) === */}
                         {user.isAdmin && (
-                            <Link to="/upload" style={{ 
-                                background: '#00adb5', color: 'white', textDecoration: 'none', 
-                                padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' 
-                            }}>
-                                + إضافة محاضرة
-                            </Link>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <Link to="/upload" style={{ 
+                                    background: '#00adb5', color: 'white', textDecoration: 'none', 
+                                    padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' 
+                                }}>
+                                    + إضافة محاضرة
+                                </Link>
+
+                                {/* 👈 تمت إضافة رابط سجل الحضور هنا */}
+                                <Link to="/attendance" style={{ 
+                                    background: '#eab308', color: 'white', textDecoration: 'none', 
+                                    padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold' 
+                                }}>
+                                    📊 سجل الحضور
+                                </Link>
+                            </div>
                         )}
                     </>
                 )}

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import QRCode from 'react-qr-code'; // 👈 استيراد مكتبة الباركود
 
 export default function Profile() {
     const { user, logout, dispatch } = useContext(AuthContext);
@@ -11,8 +12,8 @@ export default function Profile() {
     // 2. حالات تعديل البيانات الأكاديمية وكلمة المرور
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [studyType, setStudyType] = useState(''); // حالة نوع الدراسة (جديد)
-    const [section, setSection] = useState('');     // حالة الشعبة (جديد)
+    const [studyType, setStudyType] = useState(''); 
+    const [section, setSection] = useState('');     
     
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -26,13 +27,13 @@ export default function Profile() {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
-    // تعيين البيانات الأولية للمستخدم عند التحميل (بما فيها الدراسة والشعبة)
+    // تعيين البيانات الأولية للمستخدم عند التحميل
     useEffect(() => {
         if (user) {
             setName(user.name || user.full_name || '');
             setEmail(user.email || '');
-            setStudyType(user.studyType || ''); // جلب نوع الدراسة من التوكن
-            setSection(user.section || '');     // جلب الشعبة من التوكن
+            setStudyType(user.studyType || ''); 
+            setSection(user.section || '');     
         }
     }, [user]);
 
@@ -64,14 +65,13 @@ export default function Profile() {
         try {
             const token = user?.token || localStorage.getItem('token');
             const res = await axios.put('https://edu-platform-backend-alpha.vercel.app/api/users/profile', 
-                { name, study_type: studyType, section }, // إرسال البيانات الجديدة
+                { name, study_type: studyType, section }, 
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (res.data.success) {
                 setMessage({ text: 'تم تحديث البيانات بنجاح!', type: 'success' });
                 
-                // تحديث البيانات في التخزين المحلي لكي تبقى بعد التحديث
                 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
                 storedUser.name = name;
                 storedUser.studyType = studyType;
@@ -79,7 +79,6 @@ export default function Profile() {
                 localStorage.setItem('user', JSON.stringify(storedUser));
                 localStorage.setItem('userName', name);
                 
-                // تحديث الـ Context ليتغير في الواجهة فوراً
                 if (dispatch) {
                     dispatch({ type: 'UPDATE_USER', payload: { ...user, name, studyType, section } });
                 }
@@ -170,13 +169,11 @@ export default function Profile() {
                 {/* قسم الإحصائيات والمعلومات */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '40px', flexWrap: 'wrap', textAlign: 'center' }}>
                     
-                    {/* الإنجازات */}
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
                         <h3 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '30px' }}>{completedCount}</h3>
                         <p style={{ margin: 0, color: '#15803d', fontWeight: 'bold' }}>محاضرة مكتملة ✅</p>
                     </div>
                     
-                    {/* البيانات الأكاديمية (الجديدة) */}
                     <div style={{ background: '#fef3c7', border: '1px solid #fde68a', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
                         <h3 style={{ margin: '0 0 10px 0', color: '#b45309', fontSize: '20px', paddingTop: '10px' }}>
                             {studyType || 'غير محدد'} - {section || '?'}
@@ -184,7 +181,6 @@ export default function Profile() {
                         <p style={{ margin: 0, color: '#d97706', fontWeight: 'bold' }}>التصنيف 🎓</p>
                     </div>
 
-                    {/* نوع الحساب */}
                     <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
                         <h3 style={{ margin: '0 0 10px 0', color: '#1e40af', fontSize: '20px', paddingTop: '10px' }}>
                             {user.isAdmin ? 'مدير منصة' : 'طالب'}
@@ -194,7 +190,18 @@ export default function Profile() {
 
                 </div>
 
-                {/* رسائل التنبيه العادية */}
+                {/* === هوية الحضور الذكية (الباركود) - تظهر للطالب العادي === */}
+                {!user.isAdmin && user.id && (
+                    <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
+                        <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية (الباركود)</h3>
+                        <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
+                            <QRCode value={user.id.toString()} size={150} />
+                        </div>
+                        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '12px', marginBottom: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
+                    </div>
+                )}
+
+                {/* رسائل التنبيه */}
                 {message.text && (
                     <div style={{ padding: '15px', borderRadius: '12px', marginBottom: '30px', fontSize: '15px', fontWeight: 'bold', textAlign: 'center', background: message.type === 'success' ? '#f0fdf4' : '#fef2f2', color: message.type === 'success' ? '#166534' : '#991b1b', border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
                         {message.type === 'success' ? '✅ ' : '❌ '} {message.text}
@@ -294,7 +301,6 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* رسالة نجاح/فشل الترقية */}
                         {adminMessage.text && (
                             <div style={{ marginTop: '15px', padding: '10px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center', color: adminMessage.type === 'success' ? '#065f46' : '#991b1b', background: adminMessage.type === 'success' ? '#d1fae5' : '#fee2e2', border: `1px solid ${adminMessage.type === 'success' ? '#a7f3d0' : '#fecaca'}` }}>
                                 {adminMessage.text}
