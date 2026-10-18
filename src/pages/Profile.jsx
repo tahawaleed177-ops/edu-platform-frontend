@@ -191,11 +191,13 @@ export default function Profile() {
                 </div>
 
                 {/* === هوية الحضور الذكية (الباركود) - تظهر للطالب العادي === */}
-                {!user.isAdmin && user.id && (
-                    <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
+                {/* قمنا بتعديل الشرط لضمان ظهوره للطلاب فقط، حتى لو اختلفت تركيبة كائن user */}
+                {(user?.isAdmin === false || !user?.isAdmin) && user?.id && (
+                    <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px', marginTop: '20px' }}>
                         <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية (الباركود)</h3>
                         <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
-                            <QRCode value={user.id.toString()} size={150} />
+                            {/* نستخدم التشفير الاختياري لمنع أي أخطاء في حال تأخر جلب الـ ID */}
+                            <QRCode value={user?.id?.toString() || 'unknown'} size={150} />
                         </div>
                         <p style={{ color: '#64748b', fontSize: '14px', marginTop: '12px', marginBottom: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
                     </div>
