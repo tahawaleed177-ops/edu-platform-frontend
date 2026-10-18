@@ -17,7 +17,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import GPACalculator from './pages/GPACalculator';
 import MireoChat from './components/MireoChat';
 import LectureTutor from './pages/LectureTutor';
-import Attendance from './pages/Attendance'; // (تأكد من مطابقة مسار المجلد لديك سواء كان components أو pages)
+import Attendance from './pages/Attendance'; 
+
 function App() {
   return (
     <AuthProvider>
@@ -30,13 +31,15 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* روابط الطلاب المحمية */}
             <Route path="/schedule" element={ <ProtectedRoute><Schedule /></ProtectedRoute> } />
             <Route path="/favorites" element={ <ProtectedRoute><Favorites /></ProtectedRoute> } />
             <Route path="/profile" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
             <Route path="/gpa-calculator" element={ <ProtectedRoute><GPACalculator /></ProtectedRoute> } />
             <Route path="/lecture-tutor" element={ <ProtectedRoute><LectureTutor /></ProtectedRoute> } />
-            <Route path="/attendance" element={user?.isAdmin ? <Attendance /> : <Navigate to="/" />} />
-            {/* رابط التبليغات (محمي: للطلاب والأدمن فقط) */}
+            
+            {/* رابط التبليغات */}
             <Route 
               path="/announcements" 
               element={
@@ -46,7 +49,7 @@ function App() {
               } 
             />
 
-            {/* رابط لوحة التحكم (محمي: يتطلب تسجيل الدخول لأي طالب أو أدمن) */}
+            {/* رابط لوحة التحكم */}
             <Route
               path="/dashboard"
               element={
@@ -56,7 +59,9 @@ function App() {
               }
             />
 
-            {/* رابط رفع المحاضرات (محمي: يتطلب تسجيل الدخول + صلاحية أدمن حصراً) */}
+            {/* === الروابط الإدارية (محمية: تتطلب صلاحية أدمن حصراً) === */}
+            
+            {/* رابط رفع المحاضرات */}
             <Route
               path="/upload"
               element={
@@ -66,11 +71,21 @@ function App() {
               }
             />
 
+            {/* رابط سجل الحضور بالباركود */}
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Attendance />
+                </ProtectedRoute>
+              }
+            />
+
             {/* في حال كتابة أي رابط خاطئ في المتصفح يتم توجيهه للصفحة الرئيسية */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
 
-          {/* === تمت إضافة ميريو هنا لكي يظهر كأيقونة عائمة في جميع صفحات المنصة === */}
+          {/* === أيقونة ميريو العائمة === */}
           <MireoChat />
 
         </Router>
