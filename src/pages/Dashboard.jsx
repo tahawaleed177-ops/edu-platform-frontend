@@ -222,6 +222,9 @@ export default function Dashboard() {
 
             {!selectedSubject ? (
                 <>
+                    {/* === ظهور التقويم الذكي في الشاشة الرئيسية للمواد === */}
+                    <SmartDeadlines />
+                    
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '40px' }}>
                         <button
                             onClick={() => setActiveSemester('semester1')}
