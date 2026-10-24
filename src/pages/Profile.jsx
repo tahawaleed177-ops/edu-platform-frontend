@@ -6,10 +6,7 @@ import QRCode from 'react-qr-code';
 export default function Profile() {
     const { user, logout, dispatch } = useContext(AuthContext);
     
-    // 1. حالة الإحصائيات
     const [completedCount, setCompletedCount] = useState(0);
-
-    // 2. حالات تعديل البيانات الأكاديمية وكلمة المرور
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [studyType, setStudyType] = useState(''); 
@@ -18,19 +15,18 @@ export default function Profile() {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     
-    // 3. حالات لوحة إدارة المشرفين
     const [targetEmail, setTargetEmail] = useState('');
     const [adminMessage, setAdminMessage] = useState({ text: '', type: '' });
     const [isAdminLoading, setIsAdminLoading] = useState(false);
     
-    // 4. حالة إظهار/إخفاء الباركود
+    // حالات الباركود الديناميكي المحمي
     const [showQR, setShowQR] = useState(false);
+    const [qrTimestamp, setQrTimestamp] = useState(Date.now());
+    const [timeLeft, setTimeLeft] = useState(30);
 
-    // حالات واجهة المستخدم العامة
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState({ text: '', type: '' });
 
-    // تعيين البيانات الأولية للمستخدم عند التحميل
     useEffect(() => {
         if (user) {
             setName(user.name || user.full_name || '');
@@ -40,7 +36,25 @@ export default function Profile() {
         }
     }, [user]);
 
-    // جلب عدد المحاضرات المكتملة
+    // مؤقت تحديث الباركود كل 30 ثانية لمنع الغش بالصور
+    useEffect(() => {
+        let timer;
+        if (showQR) {
+            setQrTimestamp(Date.now());
+            setTimeLeft(30);
+            timer = setInterval(() => {
+                setTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        setQrTimestamp(Date.now()); // توليد باركود جديد
+                        return 30;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [showQR]);
+
     useEffect(() => {
         const fetchStats = async () => {
             try {
@@ -59,7 +73,6 @@ export default function Profile() {
         fetchStats();
     }, [user]);
 
-    // دالة تحديث البيانات
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -93,7 +106,6 @@ export default function Profile() {
         }
     };
 
-    // دالة تغيير كلمة المرور
     const handleChangePassword = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -124,7 +136,6 @@ export default function Profile() {
         }
     };
 
-    // دالة إدارة المشرفين
     const handleAdminToggle = async (makeAdmin) => {
         if (!targetEmail.trim()) return;
         setIsAdminLoading(true);
@@ -150,8 +161,9 @@ export default function Profile() {
 
     if (!user) return <div style={{textAlign: 'center', padding: '50px', color: '#00adb5'}}>جاري التحميل...</div>;
 
-    // القيمة المشفرة داخل الباركود (تعتمد على الإيميل أو الـ ID لضمان عملها دائماً)
-    const qrValue = (email || user?.email || user?.id?.toString() || 'student').trim().toLowerCase();
+    // دمج الإيميل مع التوقيت الزمني المتغير داخل الباركود
+    const baseIdentifier = (email || user?.email || user?.id?.toString() || 'student').trim().toLowerCase();
+    const dynamicQrValue = `${baseIdentifier}|${qrTimestamp}`;
 
     return (
         <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px', minHeight: '80vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -161,7 +173,6 @@ export default function Profile() {
 
             <div style={{ background: 'white', borderRadius: '24px', padding: '40px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                 
-                {/* معلومات المستخدم الأساسية */}
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                         {user.isAdmin ? '👨‍🏫' : '👨‍💻'}
@@ -172,9 +183,7 @@ export default function Profile() {
                     <p style={{ color: '#666', fontSize: '16px', margin: '0 0 30px 0' }}>{email}</p>
                 </div>
 
-                {/* قسم الإحصائيات والمعلومات */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap', textAlign: 'center' }}>
-                    
                     <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '20px', borderRadius: '16px', flex: '1 1 150px' }}>
                         <h3 style={{ margin: '0 0 10px 0', color: '#166534', fontSize: '30px' }}>{completedCount}</h3>
                         <p style={{ margin: 0, color: '#15803d', fontWeight: 'bold' }}>محاضرة مكتملة ✅</p>
@@ -193,12 +202,11 @@ export default function Profile() {
                         </h3>
                         <p style={{ margin: 0, color: '#1d4ed8', fontWeight: 'bold' }}>نوع الحساب 🛡️</p>
                     </div>
-
                 </div>
 
-                {/* === هوية الحضور الذكية (تظهر للجميع دائماً بدون أي شروط إخفاء) === */}
+                {/* === هوية الحضور الذكية المحمية من الغش === */}
                 <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', marginBottom: '30px' }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية</h3>
+                    <h3 style={{ margin: '0 0 15px 0', color: '#0B2447', fontSize: '18px' }}>📱 هوية الحضور الذكية (محمية ضد التصوير)</h3>
                     
                     {!showQR ? (
                         <button 
@@ -209,15 +217,24 @@ export default function Profile() {
                             إظهار الباركود الخاص بي 📷
                         </button>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                             <div style={{ background: 'white', padding: '15px', display: 'inline-block', borderRadius: '12px', border: '2px solid #00adb5' }}>
-                                <QRCode value={qrValue} size={160} />
+                                <QRCode value={dynamicQrValue} size={160} />
                             </div>
-                            <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>أبرز هذا الباركود للدكتور أو المشرف لتسجيل حضورك في المحاضرة.</p>
+                            
+                            {/* شريط العداد التنازلي لتجديد الباركود */}
+                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: timeLeft <= 5 ? '#dc2626' : '#0284c7', background: '#e0f2fe', padding: '6px 16px', borderRadius: '20px' }}>
+                                🔄 يتجدد الباركود تلقائياً خلال: {timeLeft} ثانية
+                            </div>
+
+                            <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>
+                                ملاحظة: لقطات الشاشة (Screenshots) غير صالحة وتُرفض تلقائياً من نظام الكاميرا.
+                            </p>
+                            
                             <button 
                                 type="button"
                                 onClick={() => setShowQR(false)}
-                                style={{ padding: '8px 20px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}
+                                style={{ padding: '8px 20px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', marginTop: '5px' }}
                             >
                                 إخفاء الباركود
                             </button>
@@ -225,17 +242,13 @@ export default function Profile() {
                     )}
                 </div>
 
-                {/* رسائل التنبيه */}
                 {message.text && (
                     <div style={{ padding: '15px', borderRadius: '12px', marginBottom: '30px', fontSize: '15px', fontWeight: 'bold', textAlign: 'center', background: message.type === 'success' ? '#f0fdf4' : '#fef2f2', color: message.type === 'success' ? '#166534' : '#991b1b', border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}>
                         {message.type === 'success' ? '✅ ' : '❌ '} {message.text}
                     </div>
                 )}
 
-                {/* قسم التعديلات والإعدادات */}
                 <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                    
-                    {/* تعديل البيانات الأكاديمية */}
                     <form onSubmit={handleUpdateProfile} style={{ flex: '1 1 300px', background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                         <h3 style={{ margin: '0 0 20px 0', color: '#0B2447', fontSize: '18px' }}>البيانات الأكاديمية</h3>
                         
@@ -270,7 +283,6 @@ export default function Profile() {
                         </button>
                     </form>
 
-                    {/* تغيير كلمة المرور */}
                     <form onSubmit={handleChangePassword} style={{ flex: '1 1 300px', background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                         <h3 style={{ margin: '0 0 20px 0', color: '#0B2447', fontSize: '18px' }}>الأمان</h3>
                         <div style={{ marginBottom: '15px' }}>
@@ -291,7 +303,6 @@ export default function Profile() {
                     </form>
                 </div>
 
-                {/* === لوحة إدارة المشرفين (تظهر للمديرين فقط) === */}
                 {user?.isAdmin && (
                     <div style={{ background: '#fffbeb', padding: '25px', borderRadius: '16px', border: '1px solid #fde68a', margin: '30px 0' }}>
                         <h3 style={{ margin: '0 0 20px 0', color: '#b45309', fontSize: '18px', fontWeight: 'bold' }}>👑 لوحة الإدارة: صلاحيات المشرفين</h3>
@@ -333,7 +344,6 @@ export default function Profile() {
                     </div>
                 )}
 
-                {/* زر تسجيل الخروج */}
                 <div style={{ textAlign: 'center', borderTop: '2px solid #f1f5f9', paddingTop: '30px' }}>
                     <button
                         onClick={logout}

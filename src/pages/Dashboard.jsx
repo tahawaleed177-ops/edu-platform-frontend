@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import MaterialCard from '../components/MaterialCard';
 import { AuthContext } from '../context/AuthContext';
+import SmartDeadlines from '../components/SmartDeadlines';
 
 export default function Dashboard() {
     const { user } = useContext(AuthContext);
