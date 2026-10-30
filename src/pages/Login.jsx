@@ -1,323 +1,331 @@
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap');
 
-.nx {
-    --bg: #05060f;
-    --violet: #8b5cf6;
-    --magenta: #ff3d9a;
-    --mint: #10f5b0;
-    --blue: #3b82f6;
-    --txt: #eef0ff;
-    --dim: #8a8fb0;
-    --cut: 18px;
+@property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+
+.fx {
+    --bg: #03030b;
+    --cyan: #00e5ff;
+    --lime: #c6ff3d;
+    --violet: #7c5cff;
+    --pink: #ff4fa3;
+    --txt: #f2f4ff;
+    --dim: #8b90b8;
+    --mx: 0; --my: 0; --px: 50%; --py: 40%;
     font-family: 'Cairo', system-ui, sans-serif;
     color: var(--txt);
+    background: var(--bg);
     min-height: 100vh;
     position: relative;
     overflow: hidden;
-    background: var(--bg);
     display: grid;
-    grid-template-columns: 1.25fr 1fr;
+    place-items: center;
+    padding: 90px 16px 110px;
     box-sizing: border-box;
+    isolation: isolate;
 }
-.nx *, .nx *::before, .nx *::after { box-sizing: border-box; }
+.fx *, .fx *::before, .fx *::after { box-sizing: border-box; }
 
-/* ===== خلفية الشفق ===== */
-.nx-aurora { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-.nx-blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: nxDrift 18s ease-in-out infinite alternate; }
-.nx-blob.a { width: 520px; height: 520px; background: var(--violet); top: -160px; right: -120px; }
-.nx-blob.b { width: 460px; height: 460px; background: var(--blue); bottom: -180px; right: 25%; animation-delay: -6s; opacity: .4; }
-.nx-blob.c { width: 380px; height: 380px; background: var(--magenta); bottom: -120px; left: -100px; animation-delay: -11s; opacity: .35; }
-.nx-blob.d { width: 260px; height: 260px; background: var(--mint); top: 30%; left: 38%; animation-delay: -3s; opacity: .18; }
-@keyframes nxDrift { to { transform: translate(60px, -40px) scale(1.15); } }
-
-.nx-hex {
-    position: absolute; inset: 0; z-index: 0; opacity: .5;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zm0 34L0 84V50' fill='none' stroke='%238b5cf6' stroke-opacity='.18' stroke-width='1'/%3E%3Cpath d='M28 100V66l28-16' fill='none' stroke='%238b5cf6' stroke-opacity='.18'/%3E%3C/svg%3E");
-    mask-image: radial-gradient(ellipse at 40% 50%, #000 20%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse at 40% 50%, #000 20%, transparent 75%);
+/* ===== الخلفية ===== */
+.fx-glow {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background:
+        radial-gradient(600px circle at var(--px) var(--py), rgba(0,229,255,.16), transparent 60%),
+        radial-gradient(900px circle at 85% 10%, rgba(124,92,255,.22), transparent 60%),
+        radial-gradient(800px circle at 10% 90%, rgba(255,79,163,.16), transparent 60%);
 }
 
-/* أرقام ثنائية متساقطة */
-.nx-bits { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-.nx-bit {
-    position: absolute; top: -30px; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-    color: var(--mint); text-shadow: 0 0 10px var(--mint);
-    animation: nxFall linear infinite; opacity: 0;
+/* أرضية شبكية بمنظور */
+.fx-floor {
+    position: absolute; left: -50%; right: -50%; bottom: -8%; height: 62%; z-index: 0;
+    perspective: 500px; pointer-events: none;
+    mask-image: linear-gradient(to top, #000 15%, transparent 92%);
+    -webkit-mask-image: linear-gradient(to top, #000 15%, transparent 92%);
 }
-@keyframes nxFall {
-    0% { transform: translateY(0); opacity: 0; }
-    10% { opacity: .55; }
-    90% { opacity: .15; }
-    100% { transform: translateY(110vh); opacity: 0; }
+.fx-floor i {
+    position: absolute; inset: 0; transform: rotateX(68deg); transform-origin: bottom;
+    background-image:
+        linear-gradient(rgba(0,229,255,.55) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,92,255,.5) 1px, transparent 1px);
+    background-size: 64px 64px;
+    animation: fxRun 3.2s linear infinite;
+}
+@keyframes fxRun { to { background-position: 0 64px, 0 0; } }
+
+/* كرة سائلة متحولة خلف البطاقة */
+.fx-blob {
+    position: absolute; z-index: 0; width: 640px; height: 640px; left: 50%; top: 50%;
+    margin: -320px 0 0 -320px; pointer-events: none;
+    background: conic-gradient(from var(--ang), var(--cyan), var(--violet), var(--pink), var(--lime), var(--cyan));
+    filter: blur(70px); opacity: .42;
+    animation: fxMorph 14s ease-in-out infinite, fxAng 10s linear infinite;
+}
+@keyframes fxMorph {
+    0%,100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+    33% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+    66% { border-radius: 50% 50% 40% 60% / 40% 70% 50% 50%; }
+}
+@keyframes fxAng { to { --ang: 360deg; } }
+
+/* حلقات رادار */
+.fx-radar { position: absolute; z-index: 0; left: 50%; top: 50%; pointer-events: none; }
+.fx-radar i {
+    position: absolute; border-radius: 50%; border: 1px solid rgba(0,229,255,.25);
+    transform: translate(-50%, -50%); animation: fxPing 6s ease-out infinite;
+}
+.fx-radar i:nth-child(1) { width: 520px; height: 520px; }
+.fx-radar i:nth-child(2) { width: 520px; height: 520px; animation-delay: -2s; }
+.fx-radar i:nth-child(3) { width: 520px; height: 520px; animation-delay: -4s; }
+@keyframes fxPing { 0% { transform: translate(-50%,-50%) scale(.6); opacity: .9; } 100% { transform: translate(-50%,-50%) scale(2.3); opacity: 0; } }
+
+/* ===== أشكال عائمة ===== */
+.fx-shape {
+    position: absolute; z-index: 1; pointer-events: none;
+    transform: translate(calc(var(--mx) * var(--d) * 1px), calc(var(--my) * var(--d) * 1px));
+    transition: transform .25s ease-out;
+}
+.fx-shape > b {
+    display: block; width: var(--s); height: var(--s);
+    animation: fxFloat var(--t) ease-in-out infinite alternate; animation-delay: var(--dl);
+}
+@keyframes fxFloat {
+    from { transform: translateY(-16px) rotate(0deg); }
+    to   { transform: translateY(18px) rotate(var(--r, 90deg)); }
+}
+.fx-shape.tri > b { background: linear-gradient(140deg, var(--cyan), var(--violet)); clip-path: polygon(50% 0, 100% 100%, 0 100%); opacity: .8; }
+.fx-shape.ring > b { border: 3px solid var(--lime); border-radius: 50%; opacity: .75; box-shadow: 0 0 22px rgba(198,255,61,.5), inset 0 0 22px rgba(198,255,61,.3); }
+.fx-shape.dia > b { background: linear-gradient(140deg, var(--pink), var(--violet)); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); opacity: .8; }
+.fx-shape.cross > b { background: var(--cyan); clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%); opacity: .7; filter: drop-shadow(0 0 10px var(--cyan)); }
+.fx-shape.pent > b { background: linear-gradient(140deg, var(--lime), var(--cyan)); clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%); opacity: .55; }
+.fx-shape.half > b { background: linear-gradient(90deg, var(--pink), transparent); border-radius: 999px 999px 0 0; height: calc(var(--s) / 2); opacity: .75; }
+.fx-shape.dot > b { background: var(--pink); border-radius: 50%; box-shadow: 0 0 24px var(--pink); opacity: .9; }
+.fx-shape.sq > b { border: 2px solid var(--violet); border-radius: 22%; box-shadow: 0 0 22px rgba(124,92,255,.6); opacity: .85; }
+
+/* ===== الشريط العلوي ===== */
+.fx-bar {
+    position: absolute; z-index: 5; top: 24px; left: 28px; right: 28px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.fx-brand {
+    display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 999px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.fx-logo {
+    width: 42px; height: 42px; display: grid; place-items: center; color: #03030b;
+    background: linear-gradient(135deg, var(--cyan), var(--lime));
+    border-radius: 14px 4px 14px 4px; animation: fxLogo 6s ease-in-out infinite;
+}
+@keyframes fxLogo { 50% { border-radius: 4px 14px 4px 14px; transform: rotate(8deg); } }
+.fx-brand b { font-size: 14.5px; font-weight: 800; display: block; line-height: 1.2; }
+.fx-brand small { font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; color: var(--cyan); letter-spacing: 2px; direction: ltr; display: block; }
+.fx-status {
+    font-family: 'Space Grotesk', sans-serif; font-size: 11px; letter-spacing: 1.5px; color: var(--dim); direction: ltr;
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 999px;
+}
+.fx-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); animation: fxBlink 1.8s infinite; }
+@keyframes fxBlink { 50% { opacity: .2; } }
+
+/* ===== البطاقة ===== */
+.fx-card {
+    --r: 46px 10px 46px 10px;
+    position: relative; z-index: 4; width: 100%; max-width: 450px;
+    padding: 62px 32px 26px; border-radius: var(--r);
+    background: linear-gradient(160deg, rgba(20,22,52,.72), rgba(7,8,22,.82));
+    backdrop-filter: blur(26px) saturate(150%); -webkit-backdrop-filter: blur(26px) saturate(150%);
+    box-shadow: 0 40px 90px -20px rgba(0,229,255,.28), 0 0 0 1px rgba(255,255,255,.04) inset;
+    transform: perspective(1200px) rotateY(calc(var(--mx) * 4deg)) rotateX(calc(var(--my) * -4deg));
+    transition: transform .25s ease-out;
+    animation: fxCardIn 1s cubic-bezier(.2,.9,.2,1) both;
+}
+@keyframes fxCardIn { from { opacity: 0; transform: perspective(1200px) translateY(50px) rotateX(18deg); } }
+.fx-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: var(--r); padding: 1.5px; pointer-events: none;
+    background: conic-gradient(from var(--ang), transparent 0 55%, var(--cyan), var(--lime), var(--pink), transparent 95%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: fxAng 5s linear infinite;
 }
 
-/* ===== جهة الهيرو ===== */
-.nx-hero {
-    position: relative; z-index: 2;
-    padding: 44px 56px;
-    display: flex; flex-direction: column; justify-content: space-between;
-    min-height: 100vh;
+/* شعار متحول في أعلى البطاقة */
+.fx-emb {
+    position: absolute; top: -44px; left: 50%; margin-left: -44px; width: 88px; height: 88px;
+    display: grid; place-items: center;
 }
-.nx-top { display: flex; align-items: center; justify-content: space-between; }
-.nx-brand { display: flex; align-items: center; gap: 14px; }
-.nx-hexlogo {
-    width: 54px; height: 60px; display: grid; place-items: center;
-    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-    background: linear-gradient(140deg, var(--violet), var(--magenta));
-    position: relative;
+.fx-emb::before {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from var(--ang), var(--cyan), var(--violet), var(--pink), var(--lime), var(--cyan));
+    animation: fxAng 4s linear infinite; filter: drop-shadow(0 0 18px rgba(0,229,255,.7));
 }
-.nx-hexlogo::after {
-    content: ''; position: absolute; inset: 2px; background: #0a0b1d;
-    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+.fx-emb::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: #070818; }
+.fx-emb .core {
+    position: absolute; inset: 14px; z-index: 1; display: grid; place-items: center; color: #03030b;
+    background: linear-gradient(135deg, var(--cyan), var(--lime));
+    animation: fxMorph 7s ease-in-out infinite;
 }
-.nx-hexlogo svg { position: relative; z-index: 2; }
-.nx-brand b { display: block; font-size: 18px; font-weight: 800; line-height: 1.2; }
-.nx-brand small { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--mint); letter-spacing: 2px; direction: ltr; display: block; text-align: right; }
-.nx-live {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1.5px; color: var(--dim);
-    display: inline-flex; align-items: center; gap: 8px; direction: ltr;
-    padding: 7px 14px; border: 1px solid rgba(255,255,255,.1);
-    clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-    background: rgba(255,255,255,.03);
-}
-.nx-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px var(--mint); animation: nxBlink 1.6s infinite; }
-@keyframes nxBlink { 50% { opacity: .25; } }
+.fx-emb .core svg { position: relative; }
+.fx-emb.busy::before { animation-duration: .8s; }
+.fx-emb.busy .core { animation-duration: 1.4s; }
+.fx-emb.bad::before { background: conic-gradient(from var(--ang), var(--pink), #ff2a55, var(--pink)); filter: drop-shadow(0 0 20px rgba(255,42,85,.8)); }
+.fx-emb.bad .core { background: linear-gradient(135deg, #ff2a55, var(--pink)); animation: fxShake .5s; }
 
-.nx-title { margin: 28px 0 0; }
-.nx-title h1 {
-    margin: 0; font-size: clamp(34px, 4.2vw, 62px); font-weight: 900; line-height: 1.15; letter-spacing: -1px;
+/* التبويب */
+.fx-tabs {
+    position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; margin-bottom: 26px;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 18px 6px 18px 6px;
 }
-.nx-title h1 span {
-    background: linear-gradient(90deg, var(--violet), var(--magenta) 55%, var(--mint));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    background-size: 200% 100%; animation: nxShift 6s linear infinite;
+.fx-tabs::before {
+    content: ''; position: absolute; top: 4px; bottom: 4px; right: 4px; width: calc(50% - 4px);
+    background: linear-gradient(100deg, var(--cyan), var(--violet)); border-radius: 14px 4px 14px 4px;
+    box-shadow: 0 0 26px rgba(0,229,255,.45);
 }
-@keyframes nxShift { to { background-position: -200% 0; } }
-.nx-title p { margin: 14px 0 0; color: var(--dim); font-size: 16px; line-height: 1.9; max-width: 460px; }
+.fx-tab { position: relative; z-index: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 800; color: var(--dim); text-decoration: none; transition: color .2s; }
+.fx-tab.on { color: #03030b; }
+.fx-tab:not(.on):hover { color: #fff; }
 
-/* ===== المشهد ثلاثي الأبعاد ===== */
-.nx-stage { position: relative; height: 420px; display: grid; place-items: center; perspective: 1100px; }
-.nx-ring {
-    position: absolute; border-radius: 50%;
-    border: 1px dashed rgba(139, 92, 246, .45);
-    animation: nxSpin linear infinite;
+.fx-card h2 { margin: 0 0 6px; font-size: 28px; font-weight: 900; text-align: center; }
+.fx-card h2 span {
+    background: linear-gradient(90deg, var(--cyan), var(--lime), var(--pink), var(--cyan)); background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; animation: fxText 5s linear infinite;
 }
-.nx-ring.r1 { width: 300px; height: 300px; animation-duration: 28s; }
-.nx-ring.r2 { width: 410px; height: 410px; animation-duration: 42s; animation-direction: reverse; border-color: rgba(16, 245, 176, .3); }
-@keyframes nxSpin { to { transform: rotate(360deg); } }
-.nx-orb {
-    position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%);
-}
-.nx-orb span {
-    display: block; white-space: nowrap;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
-    padding: 6px 12px; color: #fff;
-    background: rgba(14, 16, 40, .85);
-    border: 1px solid rgba(139, 92, 246, .6);
-    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-    animation: nxSpin linear infinite reverse;
-}
-.nx-ring.r1 .nx-orb span { animation-duration: 28s; }
-.nx-ring.r2 .nx-orb span { animation-duration: 42s; animation-direction: normal; border-color: rgba(16,245,176,.6); }
+@keyframes fxText { to { background-position: -250% 0; } }
+.fx-sub { margin: 0 0 24px; text-align: center; color: var(--dim); font-size: 13.5px; line-height: 1.8; }
 
-.nx-scene { width: 170px; height: 170px; transform-style: preserve-3d; animation: nxCube 22s linear infinite; position: relative; }
-@keyframes nxCube {
-    from { transform: rotateX(-24deg) rotateY(0deg); }
-    to   { transform: rotateX(-24deg) rotateY(360deg); }
+.fx-err {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 16px; padding: 11px 14px; border-radius: 14px 4px 14px 4px;
+    background: rgba(255,42,85,.1); border: 1px solid rgba(255,42,85,.5); color: #ff95aa; font-size: 13.5px; font-weight: 700;
+    animation: fxShake .45s;
 }
-.nx-face {
-    position: absolute; inset: 0; display: grid; place-items: center;
-    border: 1.5px solid rgba(139, 92, 246, .9);
-    background: linear-gradient(135deg, rgba(139,92,246,.22), rgba(255,61,154,.1));
-    box-shadow: inset 0 0 30px rgba(139,92,246,.35), 0 0 22px rgba(139,92,246,.25);
-    font-family: 'JetBrains Mono', monospace; font-size: 40px; font-weight: 700; color: #fff;
-    text-shadow: 0 0 16px var(--violet);
-}
-.nx-face.f1 { transform: translateZ(85px); }
-.nx-face.f2 { transform: rotateY(90deg) translateZ(85px); }
-.nx-face.f3 { transform: rotateY(180deg) translateZ(85px); }
-.nx-face.f4 { transform: rotateY(-90deg) translateZ(85px); }
-.nx-face.f5 { transform: rotateX(90deg) translateZ(85px); border-color: rgba(16,245,176,.9); text-shadow: 0 0 16px var(--mint); }
-.nx-face.f6 { transform: rotateX(-90deg) translateZ(85px); border-color: rgba(255,61,154,.9); text-shadow: 0 0 16px var(--magenta); }
-.nx-core {
-    position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px;
-    transform-style: preserve-3d; animation: nxCore 9s linear infinite;
-}
-@keyframes nxCore { to { transform: rotateX(360deg) rotateY(-360deg); } }
-.nx-core i { position: absolute; inset: 0; border: 1.5px solid var(--mint); background: rgba(16,245,176,.12); box-shadow: 0 0 18px rgba(16,245,176,.6); }
-.nx-core i:nth-child(1) { transform: translateZ(27px); } .nx-core i:nth-child(2) { transform: rotateY(90deg) translateZ(27px); }
-.nx-core i:nth-child(3) { transform: rotateY(180deg) translateZ(27px); } .nx-core i:nth-child(4) { transform: rotateY(-90deg) translateZ(27px); }
-.nx-core i:nth-child(5) { transform: rotateX(90deg) translateZ(27px); } .nx-core i:nth-child(6) { transform: rotateX(-90deg) translateZ(27px); }
-.nx-shadow {
-    position: absolute; bottom: 14px; width: 200px; height: 30px; border-radius: 50%;
-    background: radial-gradient(closest-side, rgba(139,92,246,.55), transparent);
-    animation: nxShadow 3s ease-in-out infinite alternate;
-}
-@keyframes nxShadow { to { transform: scale(.78); opacity: .6; } }
+@keyframes fxShake { 25%,75% { transform: translateX(-7px); } 50% { transform: translateX(7px); } }
 
-.nx-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.nx-stat {
-    padding: 16px 18px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
-    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
-    transition: background .3s, transform .3s;
+/* الحقول */
+.fx-fld { position: relative; margin-bottom: 14px; border-radius: 18px 5px 18px 5px; overflow: hidden; }
+.fx-fld::before {
+    content: ''; position: absolute; inset: 0; padding: 1.5px; border-radius: inherit; pointer-events: none; z-index: 2;
+    background: rgba(255,255,255,.14); transition: background .3s;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
 }
-.nx-stat:hover { background: rgba(139,92,246,.14); transform: translateY(-3px); }
-.nx-stat em { font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--mint); letter-spacing: 1px; display: block; margin-bottom: 6px; direction: ltr; text-align: right; }
-.nx-stat b { font-size: 14.5px; font-weight: 700; }
+.fx-fld:focus-within::before { background: linear-gradient(100deg, var(--cyan), var(--lime)); }
+.fx-fld::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 2px; top: 0; z-index: 2; opacity: 0; pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent); box-shadow: 0 0 14px var(--cyan);
+}
+.fx-fld:focus-within::after { opacity: 1; animation: fxScan 1.8s ease-in-out infinite alternate; }
+@keyframes fxScan { from { top: 0; } to { top: calc(100% - 2px); } }
+.fx-fld .in {
+    width: 100%; height: 64px; padding: 20px 56px 0 52px; background: rgba(8,10,28,.85); border: 0; outline: 0; color: #fff;
+    font-size: 15.5px; font-family: 'Space Grotesk', 'Cairo', sans-serif; direction: ltr; text-align: right;
+}
+.fx-fld label {
+    position: absolute; right: 56px; top: 21px; z-index: 3; font-size: 14px; font-weight: 700; color: var(--dim);
+    pointer-events: none; transition: all .22s ease; transform-origin: right;
+}
+.fx-fld .in:focus ~ label, .fx-fld .in:not(:placeholder-shown) ~ label { top: 9px; font-size: 11px; color: var(--cyan); }
+.fx-ic { position: absolute; right: 18px; top: 20px; z-index: 3; color: #6c72a6; transition: color .3s; display: grid; }
+.fx-fld:focus-within .fx-ic { color: var(--lime); }
+.fx-eye { position: absolute; left: 12px; top: 18px; z-index: 3; background: transparent; border: 0; color: #6c72a6; cursor: pointer; padding: 4px; display: grid; transition: color .2s; }
+.fx-eye:hover { color: #fff; }
 
-/* ===== جهة النموذج ===== */
-.nx-side { position: relative; z-index: 3; display: grid; place-items: center; padding: 32px 40px 32px 56px; }
-.nx-frame {
-    width: 100%; max-width: 440px; padding: 1.5px;
-    background: linear-gradient(150deg, var(--violet), rgba(255,255,255,.08) 40%, rgba(255,255,255,.08) 60%, var(--magenta));
-    clip-path: polygon(0 var(--cut), var(--cut) 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
-    filter: drop-shadow(0 30px 60px rgba(139, 92, 246, .35));
-    animation: nxIn .9s cubic-bezier(.2,.8,.2,1) both;
-}
-@keyframes nxIn { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
-.nx-panel {
-    padding: 34px 32px 26px;
-    background: linear-gradient(180deg, rgba(16, 18, 44, .94), rgba(8, 9, 24, .96));
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    clip-path: polygon(0 calc(var(--cut) - 1px), calc(var(--cut) - 1px) 0, calc(100% - var(--cut) + 1px) 0, 100% calc(var(--cut) - 1px), 100% calc(100% - var(--cut) + 1px), calc(100% - var(--cut) + 1px) 100%, calc(var(--cut) - 1px) 100%, 0 calc(100% - var(--cut) + 1px));
-}
+.fx-row { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 22px; font-size: 13px; }
+.fx-chk { display: inline-flex; align-items: center; gap: 9px; color: var(--dim); font-weight: 600; cursor: pointer; user-select: none; }
+.fx-chk input { position: absolute; opacity: 0; pointer-events: none; }
+.fx-chk .sw { width: 38px; height: 22px; border-radius: 99px; background: rgba(255,255,255,.1); position: relative; transition: background .25s; }
+.fx-chk .sw::after { content: ''; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .25s; }
+.fx-chk input:checked + .sw { background: linear-gradient(90deg, var(--cyan), var(--lime)); }
+.fx-chk input:checked + .sw::after { transform: translateX(-16px); background: #03030b; }
+.fx-chk input:focus-visible + .sw { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.fx-forgot { color: var(--cyan); font-weight: 700; text-decoration: none; transition: color .2s; }
+.fx-forgot:hover { color: var(--lime); }
 
-.nx-tabs {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 26px;
-    background: rgba(255,255,255,.05);
-    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+/* الزر */
+.fx-go {
+    position: relative; width: 100%; height: 60px; border: 0; cursor: pointer; overflow: hidden; color: #03030b;
+    font-family: inherit; font-size: 16.5px; font-weight: 900; border-radius: 20px 6px 20px 6px;
+    background: linear-gradient(100deg, var(--cyan), var(--lime), var(--cyan)); background-size: 220% 100%;
+    animation: fxGrad 4s linear infinite; display: flex; align-items: center; justify-content: center; gap: 14px;
+    transition: transform .25s, border-radius .4s, box-shadow .25s; box-shadow: 0 14px 34px -8px rgba(0,229,255,.55);
 }
-.nx-tab { text-align: center; padding: 10px; font-size: 14px; font-weight: 700; color: var(--dim); text-decoration: none; transition: color .2s; }
-.nx-tab:hover { color: #fff; }
-.nx-tab.on {
-    color: #fff; background: linear-gradient(90deg, var(--violet), #a855f7);
-    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-    box-shadow: 0 0 24px rgba(139,92,246,.5);
-}
+@keyframes fxGrad { to { background-position: -220% 0; } }
+.fx-go:hover:not(:disabled) { transform: translateY(-3px); border-radius: 6px 20px 6px 20px; box-shadow: 0 20px 44px -8px rgba(198,255,61,.55); }
+.fx-go:active:not(:disabled) { transform: translateY(0) scale(.99); }
+.fx-go:disabled { cursor: not-allowed; filter: saturate(.7); }
+.fx-go:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.fx-go .arr { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #03030b; color: var(--cyan); transition: transform .3s; }
+.fx-go:hover:not(:disabled) .arr { transform: translateX(-6px) rotate(-45deg); }
+.fx-spin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid rgba(3,3,11,.25); border-top-color: #03030b; animation: fxRot .7s linear infinite; }
+@keyframes fxRot { to { transform: rotate(360deg); } }
 
-.nx-panel h2 { margin: 0 0 6px; font-size: 27px; font-weight: 900; }
-.nx-panel .sub { margin: 0 0 24px; color: var(--dim); font-size: 14px; line-height: 1.8; }
+.fx-foot {
+    margin-top: 22px; padding-top: 16px; border-top: 1px dashed rgba(255,255,255,.12); direction: ltr;
+    display: flex; justify-content: space-between; font-family: 'Space Grotesk', sans-serif; font-size: 10.5px; letter-spacing: 1.2px; color: #5e6492;
+}
+.fx-foot span { display: inline-flex; align-items: center; gap: 6px; }
+.fx-foot i { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); }
 
-.nx-err {
-    display: flex; gap: 10px; align-items: center; margin-bottom: 18px; padding: 11px 14px;
-    background: rgba(255, 61, 90, .1); border: 1px solid rgba(255, 61, 90, .45); color: #ff8da1;
-    font-size: 13.5px; font-weight: 700;
-    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
-    animation: nxShake .45s;
+/* شرائح الميزات */
+.fx-chips { position: absolute; z-index: 5; bottom: 26px; left: 0; right: 0; display: flex; justify-content: center; gap: 14px; padding: 0 16px; flex-wrap: wrap; }
+.fx-chip {
+    display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px 10px 14px; font-size: 13.5px; font-weight: 700;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    transition: transform .3s, background .3s;
 }
-@keyframes nxShake { 25%,75% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
+.fx-chip:nth-child(1) { border-radius: 999px; }
+.fx-chip:nth-child(2) { border-radius: 16px 4px 16px 4px; }
+.fx-chip:nth-child(3) { border-radius: 4px 16px 4px 16px; }
+.fx-chip:hover { transform: translateY(-5px); background: rgba(0,229,255,.12); }
+.fx-chip em { font-style: normal; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; color: #03030b; padding: 3px 8px; background: linear-gradient(90deg, var(--cyan), var(--lime)); border-radius: 99px; }
 
-.nx-fld {
-    --c: rgba(255,255,255,.14);
-    padding: 1px; margin-bottom: 14px; background: var(--c);
-    clip-path: polygon(0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
-    transition: background .3s;
-}
-.nx-fld:focus-within { background: linear-gradient(100deg, var(--violet), var(--mint)); }
-.nx-fld-in {
-    display: flex; align-items: center; gap: 12px; padding: 0 14px; height: 64px; background: #0a0c20;
-    clip-path: polygon(0 11px, 11px 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%);
-}
-.nx-ic { color: #6c71a0; display: grid; transition: color .3s; flex-shrink: 0; }
-.nx-fld:focus-within .nx-ic { color: var(--mint); }
-.nx-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.nx-col label { font-size: 11.5px; font-weight: 700; color: var(--dim); margin-bottom: 2px; transition: color .3s; }
-.nx-fld:focus-within .nx-col label { color: var(--mint); }
-.nx-col input {
-    width: 100%; background: transparent; border: 0; outline: 0; color: #fff; font-size: 15px;
-    font-family: 'JetBrains Mono', 'Cairo', monospace; padding: 0; direction: ltr; text-align: right;
-}
-.nx-col input::placeholder { color: #4a4f78; }
-.nx-eye { background: transparent; border: 0; color: #6c71a0; cursor: pointer; display: grid; padding: 6px; transition: color .2s; }
-.nx-eye:hover { color: #fff; }
-
-.nx-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 22px; font-size: 13px; }
-.nx-chk { display: inline-flex; align-items: center; gap: 9px; color: var(--dim); font-weight: 600; cursor: pointer; user-select: none; }
-.nx-chk input { position: absolute; opacity: 0; pointer-events: none; }
-.nx-chk .bx {
-    width: 18px; height: 18px; border: 1.5px solid #4a4f78; display: grid; place-items: center; transition: all .2s;
-    clip-path: polygon(0 5px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%);
-}
-.nx-chk .bx svg { opacity: 0; transform: scale(.4); transition: all .2s; }
-.nx-chk input:checked + .bx { background: var(--mint); border-color: var(--mint); }
-.nx-chk input:checked + .bx svg { opacity: 1; transform: none; }
-.nx-chk input:focus-visible + .bx { outline: 2px solid var(--violet); outline-offset: 2px; }
-.nx-forgot { color: #b9a4ff; font-weight: 700; text-decoration: none; transition: color .2s; }
-.nx-forgot:hover { color: var(--mint); }
-
-.nx-go {
-    position: relative; width: 100%; height: 58px; border: 0; cursor: pointer; overflow: hidden;
-    color: #fff; font-family: inherit; font-size: 16px; font-weight: 800;
-    background: linear-gradient(100deg, var(--violet), var(--magenta), var(--violet));
-    background-size: 200% 100%; animation: nxGrad 5s linear infinite;
-    clip-path: polygon(16px 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
-    display: flex; align-items: center; justify-content: center; gap: 12px;
-    transition: transform .2s, filter .2s;
-}
-@keyframes nxGrad { to { background-position: -200% 0; } }
-.nx-go::after {
-    content: ''; position: absolute; top: 0; bottom: 0; width: 50px; left: -90px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent); transform: skewX(-22deg);
-}
-.nx-go:hover:not(:disabled)::after { left: calc(100% + 40px); transition: left .7s; }
-.nx-go:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.12) drop-shadow(0 12px 22px rgba(255,61,154,.45)); }
-.nx-go:active:not(:disabled) { transform: translateY(0); }
-.nx-go:disabled { opacity: .75; cursor: not-allowed; }
-.nx-go:focus-visible { outline: 2px solid var(--mint); outline-offset: 3px; }
-.nx-loader { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: nxSpin .7s linear infinite; }
-
-.nx-foot {
-    margin-top: 22px; padding-top: 16px; border-top: 1px dashed rgba(255,255,255,.12);
-    display: flex; justify-content: space-between; align-items: center;
-    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #5d6291; letter-spacing: 1px; direction: ltr;
-}
-.nx-foot span { display: inline-flex; align-items: center; gap: 6px; }
-.nx-foot i { width: 6px; height: 6px; background: var(--mint); border-radius: 50%; box-shadow: 0 0 8px var(--mint); }
-
-/* ===== استجابة ===== */
-@media (max-width: 980px) {
-    .nx { grid-template-columns: 1fr; }
-    .nx-hero { display: none; }
-    .nx-side { padding: 24px 16px; min-height: 100vh; }
+@media (max-width: 760px) {
+    .fx { padding: 96px 14px 40px; }
+    .fx-chips, .fx-status { display: none; }
+    .fx-shape.hide-m { display: none; }
+    .fx-bar { left: 14px; right: 14px; top: 16px; }
+    .fx-card { padding: 60px 22px 22px; }
+    .fx-blob { width: 420px; height: 420px; margin: -210px 0 0 -210px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .nx *, .nx *::before, .nx *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; }
+    .fx *, .fx *::before, .fx *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
 `;
 
-/* أرقام عشوائية ثابتة (لا تتغير بين إعادة الرسم) */
-function makeBits(n) {
-    let s = 7;
-    const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
-    return Array.from({ length: n }, (_, i) => ({
-        id: i,
-        ch: rnd() > 0.5 ? '1' : '0',
-        left: `${Math.round(rnd() * 100)}%`,
-        size: 11 + Math.round(rnd() * 9),
-        dur: 9 + rnd() * 11,
-        delay: -rnd() * 18,
-    }));
-}
+const SHAPES = [
+    { k: 'tri',   top: '14%', left: '8%',  s: 74, d: 38, t: 7,  dl: 0,   r: '140deg' },
+    { k: 'ring',  top: '22%', left: '82%', s: 96, d: 26, t: 9,  dl: -2,  r: '200deg' },
+    { k: 'dia',   top: '68%', left: '10%', s: 62, d: 46, t: 8,  dl: -4,  r: '180deg' },
+    { k: 'cross', top: '12%', left: '62%', s: 38, d: 54, t: 6,  dl: -1,  r: '120deg', m: 1 },
+    { k: 'pent',  top: '72%', left: '84%', s: 84, d: 30, t: 10, dl: -5,  r: '160deg' },
+    { k: 'half',  top: '46%', left: '3%',  s: 90, d: 22, t: 8,  dl: -3,  r: '40deg',  m: 1 },
+    { k: 'dot',   top: '84%', left: '46%', s: 16, d: 60, t: 5,  dl: -2,  r: '0deg' },
+    { k: 'sq',    top: '40%', left: '91%', s: 54, d: 40, t: 7,  dl: -6,  r: '220deg', m: 1 },
+    { k: 'dot',   top: '9%',  left: '30%', s: 12, d: 64, t: 6,  dl: -1,  r: '0deg' },
+    { k: 'ring',  top: '86%', left: '24%', s: 44, d: 36, t: 9,  dl: -4,  r: '260deg', m: 1 },
+];
 
 const IcMail = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 6h16v12H4z" /><path d="m4 7 8 6 8-6" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="4" /><path d="m4 8 8 6 8-6" />
     </svg>
 );
-const IcKey = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="8" cy="15" r="4" /><path d="m11 12 8-8M16 7l3 3M14 9l2 2" />
+const IcLock = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="10" width="16" height="11" rx="4" /><path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v2" />
     </svg>
 );
 const IcEye = ({ off }) => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
         {off && <path d="M4 4l16 16" />}
+    </svg>
+);
+const IcFinger = () => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3a7 7 0 0 0-7 7v2M12 7a3 3 0 0 0-3 3v4c0 2 .6 4 1.8 6M12 11v3c0 2.2.5 4 1.4 5.5M16 10a4 4 0 0 0-1.2-2.8M19 12v1c0 2.4-.4 4.4-1.2 6" />
     </svg>
 );
 
@@ -330,7 +338,25 @@ export default function Login() {
 
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
-    const bits = useMemo(() => makeBits(26), []);
+    const rootRef = useRef(null);
+    const shapes = useMemo(() => SHAPES, []);
+
+    // تتبع الماوس: يحرك الأشكال والبطاقة والإضاءة بدون إعادة رسم
+    useEffect(() => {
+        const el = rootRef.current;
+        if (!el) return;
+        const move = (e) => {
+            const r = el.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width;
+            const y = (e.clientY - r.top) / r.height;
+            el.style.setProperty('--mx', ((x - 0.5) * 2).toFixed(3));
+            el.style.setProperty('--my', ((y - 0.5) * 2).toFixed(3));
+            el.style.setProperty('--px', `${(x * 100).toFixed(1)}%`);
+            el.style.setProperty('--py', `${(y * 100).toFixed(1)}%`);
+        };
+        window.addEventListener('pointermove', move, { passive: true });
+        return () => window.removeEventListener('pointermove', move);
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -348,174 +374,145 @@ export default function Login() {
         }
     };
 
+    const embState = isLoading ? 'busy' : errorMsg ? 'bad' : '';
+
     return (
-        <div className="nx" dir="rtl">
+        <div className="fx" dir="rtl" ref={rootRef}>
             <style>{css}</style>
 
             {/* الخلفية */}
-            <div className="nx-aurora" aria-hidden="true">
-                <span className="nx-blob a" /><span className="nx-blob b" /><span className="nx-blob c" /><span className="nx-blob d" />
-            </div>
-            <div className="nx-hex" aria-hidden="true" />
-            <div className="nx-bits" aria-hidden="true">
-                {bits.map((b) => (
-                    <span key={b.id} className="nx-bit" style={{ left: b.left, fontSize: b.size, animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s` }}>{b.ch}</span>
-                ))}
-            </div>
+            <div className="fx-glow" aria-hidden="true" />
+            <div className="fx-blob" aria-hidden="true" />
+            <div className="fx-radar" aria-hidden="true"><i /><i /><i /></div>
+            <div className="fx-floor" aria-hidden="true"><i /></div>
 
-            {/* ===== الهيرو ===== */}
-            <section className="nx-hero">
-                <div>
-                    <div className="nx-top">
-                        <div className="nx-brand">
-                            <div className="nx-hexlogo">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10f5b0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 6l-3 12" />
-                                </svg>
-                            </div>
-                            <div>
-                                <b>كلية هندسة الحاسوب</b>
-                                <small>CE · STUDENT PORTAL</small>
-                            </div>
-                        </div>
-                        <div className="nx-live"><i />SYSTEM ONLINE</div>
+            {shapes.map((s, i) => (
+                <div
+                    key={i}
+                    className={`fx-shape ${s.k}${s.m ? ' hide-m' : ''}`}
+                    style={{ top: s.top, left: s.left, '--d': s.d, '--s': `${s.s}px`, '--t': `${s.t}s`, '--dl': `${s.dl}s`, '--r': s.r }}
+                    aria-hidden="true"
+                >
+                    <b />
+                </div>
+            ))}
+
+            {/* الشريط العلوي */}
+            <header className="fx-bar">
+                <div className="fx-brand">
+                    <div className="fx-logo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 6l-3 12" />
+                        </svg>
                     </div>
-
-                    <div className="nx-title">
-                        <h1>هنا تُبنى <span>عقول المستقبل</span><br />سطراً بعد سطر</h1>
-                        <p>منصتك الأكاديمية للمحاضرات والمصادر والنقاش والمساعد الذكي، كل ما يحتاجه مهندس الحاسوب في مكان واحد.</p>
+                    <div>
+                        <b>كلية هندسة الحاسوب</b>
+                        <small>CE · NEXT PORTAL</small>
                     </div>
                 </div>
+                <div className="fx-status"><i />ALL SYSTEMS ONLINE</div>
+            </header>
 
-                <div className="nx-stage" aria-hidden="true">
-                    <div className="nx-ring r1">
-                        <div className="nx-orb"><span>Algorithms</span></div>
-                        <div className="nx-orb" style={{ top: '100%' }}><span>Networks</span></div>
-                    </div>
-                    <div className="nx-ring r2">
-                        <div className="nx-orb" style={{ left: '14.6%', top: '25%' }}><span>AI / ML</span></div>
-                        <div className="nx-orb" style={{ left: '85.4%', top: '75%' }}><span>Embedded</span></div>
-                        <div className="nx-orb" style={{ left: '85.4%', top: '25%' }}><span>Databases</span></div>
-                    </div>
-
-                    <div className="nx-scene">
-                        <div className="nx-face f1">{'</>'}</div>
-                        <div className="nx-face f2">01</div>
-                        <div className="nx-face f3">{'{ }'}</div>
-                        <div className="nx-face f4">AI</div>
-                        <div className="nx-face f5">&gt;_</div>
-                        <div className="nx-face f6">CPU</div>
-                        <div className="nx-core"><i /><i /><i /><i /><i /><i /></div>
-                    </div>
-                    <div className="nx-shadow" />
+            {/* بطاقة الدخول */}
+            <main className="fx-card">
+                <div className={`fx-emb ${embState}`} aria-hidden="true">
+                    <div className="core"><IcFinger /></div>
                 </div>
 
-                <div className="nx-stats">
-                    <div className="nx-stat"><em>01 / LECTURES</em><b>محاضرات مرتبة بالمراحل</b></div>
-                    <div className="nx-stat"><em>02 / AI ASSIST</em><b>مساعد دراسة ذكي</b></div>
-                    <div className="nx-stat"><em>03 / COMMUNITY</em><b>نقاش وتعليقات الطلبة</b></div>
+                <div className="fx-tabs">
+                    <span className="fx-tab on">تسجيل الدخول</span>
+                    <Link to="/register" className="fx-tab">حساب جديد</Link>
                 </div>
-            </section>
 
-            {/* ===== بطاقة الدخول ===== */}
-            <section className="nx-side">
-                <div className="nx-frame">
-                    <div className="nx-panel">
-                        <div className="nx-tabs">
-                            <span className="nx-tab on">تسجيل الدخول</span>
-                            <Link to="/register" className="nx-tab">حساب جديد</Link>
-                        </div>
+                <h2>مرحباً بك في <span>المستقبل</span></h2>
+                <p className="fx-sub">أدخل بياناتك الجامعية لفتح بوابة المحاضرات والمساعد الذكي.</p>
 
-                        <h2>أهلاً بعودتك</h2>
-                        <p className="sub">أدخل بياناتك الجامعية لفتح بوابة المحاضرات.</p>
+                {errorMsg && (
+                    <div className="fx-err" role="alert">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 3 2 20h20L12 3Z" /><path d="M12 10v4M12 17h.01" />
+                        </svg>
+                        <span>{errorMsg}</span>
+                    </div>
+                )}
 
-                        {errorMsg && (
-                            <div className="nx-err" role="alert">
-                                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 3 2 20h20L12 3Z" /><path d="M12 10v4M12 17h.01" />
-                                </svg>
-                                <span>{errorMsg}</span>
-                            </div>
+                <form onSubmit={handleLogin}>
+                    <div className="fx-fld">
+                        <span className="fx-ic"><IcMail /></span>
+                        <input
+                            id="fx-email"
+                            className="in"
+                            type="email"
+                            required
+                            autoComplete="username"
+                            placeholder=" "
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={isLoading}
+                        />
+                        <label htmlFor="fx-email">البريد الإلكتروني الجامعي</label>
+                    </div>
+
+                    <div className="fx-fld">
+                        <span className="fx-ic"><IcLock /></span>
+                        <input
+                            id="fx-pass"
+                            className="in"
+                            type={showPass ? 'text' : 'password'}
+                            required
+                            autoComplete="current-password"
+                            placeholder=" "
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={isLoading}
+                        />
+                        <label htmlFor="fx-pass">كلمة المرور</label>
+                        <button
+                            type="button"
+                            className="fx-eye"
+                            tabIndex={-1}
+                            onClick={() => setShowPass((s) => !s)}
+                            aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                        >
+                            <IcEye off={showPass} />
+                        </button>
+                    </div>
+
+                    <div className="fx-row">
+                        <label className="fx-chk">
+                            <input type="checkbox" disabled={isLoading} />
+                            <span className="sw" />
+                            تذكرني
+                        </label>
+                        <Link to="/forgot-password" className="fx-forgot">نسيت كلمة المرور؟</Link>
+                    </div>
+
+                    <button type="submit" className="fx-go" disabled={isLoading}>
+                        {isLoading ? (
+                            <><span className="fx-spin" />جاري التحقق...</>
+                        ) : (
+                            <>
+                                دخول إلى المنصة
+                                <span className="arr">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+                                </span>
+                            </>
                         )}
+                    </button>
+                </form>
 
-                        <form onSubmit={handleLogin}>
-                            <div className="nx-fld">
-                                <div className="nx-fld-in">
-                                    <span className="nx-ic"><IcMail /></span>
-                                    <div className="nx-col">
-                                        <label htmlFor="nx-email">البريد الإلكتروني الجامعي</label>
-                                        <input
-                                            id="nx-email"
-                                            type="email"
-                                            required
-                                            autoComplete="username"
-                                            placeholder="name@university.edu"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            disabled={isLoading}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="nx-fld">
-                                <div className="nx-fld-in">
-                                    <span className="nx-ic"><IcKey /></span>
-                                    <div className="nx-col">
-                                        <label htmlFor="nx-pass">كلمة المرور</label>
-                                        <input
-                                            id="nx-pass"
-                                            type={showPass ? 'text' : 'password'}
-                                            required
-                                            autoComplete="current-password"
-                                            placeholder="••••••••••"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            disabled={isLoading}
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className="nx-eye"
-                                        tabIndex={-1}
-                                        onClick={() => setShowPass((s) => !s)}
-                                        aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-                                    >
-                                        <IcEye off={showPass} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="nx-row">
-                                <label className="nx-chk">
-                                    <input type="checkbox" disabled={isLoading} />
-                                    <span className="bx">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#05060f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-                                    </span>
-                                    تذكرني
-                                </label>
-                                <Link to="/forgot-password" className="nx-forgot">نسيت كلمة المرور؟</Link>
-                            </div>
-
-                            <button type="submit" className="nx-go" disabled={isLoading}>
-                                {isLoading ? (
-                                    <><span className="nx-loader" />جاري التحقق...</>
-                                ) : (
-                                    <>
-                                        دخول إلى المنصة
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
-                                    </>
-                                )}
-                            </button>
-                        </form>
-
-                        <div className="nx-foot">
-                            <span><i />TLS ENCRYPTED</span>
-                            <span>v2.0 · CE-PORTAL</span>
-                        </div>
-                    </div>
+                <div className="fx-foot">
+                    <span><i />TLS ENCRYPTED</span>
+                    <span>v3.0 · NEXT</span>
                 </div>
-            </section>
+            </main>
+
+            {/* شرائح الميزات */}
+            <div className="fx-chips" aria-hidden="true">
+                <div className="fx-chip"><em>01</em>محاضرات مرتبة بالمراحل</div>
+                <div className="fx-chip"><em>02</em>مساعد دراسة ذكي</div>
+                <div className="fx-chip"><em>03</em>نقاش وتعليقات الطلبة</div>
+            </div>
         </div>
     );
 }
